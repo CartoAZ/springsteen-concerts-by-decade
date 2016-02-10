@@ -104,4 +104,6 @@ function getData(map){
 //     });
 // };
 
+
+
 $(document).ready(createMap);
