@@ -1,11 +1,8 @@
 /* required styles */
 #map {
-    height: 280px;
+    height: 400px;
 }
-h1 {
-		color: green;
-		font-size: 2em
-}
+
 .leaflet-pane,
 .leaflet-tile,
 .leaflet-marker-icon,
