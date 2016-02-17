@@ -1,4 +1,20 @@
-/* Map showing GeoJSON data from megacities.geojson */
+/* Map showing GeoJSON data from megacities.geojson
+- Get data
+- create leaflet map
+- Bring in map tiles
+- Put data on map
+- Convert points to circle markers
+- Make proportional symbol based on attribute
+- Do this for each of our 7 attributes
+- Make circles change size based on selected year
+- Add time slider/temporal aspect
+- Add background information/point popups
+- Add pan
+- Add zoom
+- Add other elements (title, infographics, etc.)
+
+
+*/
 
 //function to instantiate the Leaflet map
 function createMap(){
@@ -17,34 +33,85 @@ function createMap(){
     getData(map);
 };
 
+//calculate the radius of each proportional symbols
+function calcPropRadius(attValue) {
+    //scale factor to adjust symbol size evenly
+    var scalFactor = 50;
+    //area based on attribute value and scale factor
+    var area = attValue * scalFactor;
+    //radius calculated based on area
+    var radius = Math.sqrt(area/Math.PI);
 
-//get data function that turns point markers to circle markers
+    return radius;
+}
+
+function pointToLayer(feature, latlng){
+    //determines which attribute to visualize with proportional symbols
+    var attribute = "Pop_2015"
+
+    //create marker options
+    var options = {
+       fillColor: "#76EE00",
+       color: "#000",
+       weight: 1,
+       opacity: 1,
+       fillOpacity: 0.8
+    };
+
+    //determine value of selected attribute for each feature
+    var attValue = Number(feature.properties[attribute]);
+
+    //give each feature's circle marker a radius based on its attribute
+    options.radius = calcPropRadius(attValue);
+
+    //create circle marker layer
+    var layer = L.circleMarker(latlng, options);
+
+    //build popup content string
+    var popupContent = "<p><b>City:</b> " + feature.properties.City + "</p>";
+
+    //add formatted attribute to popup content string
+    var year = attribute.split("_")[1];
+    popupContent += "<p><b>Population in " + year + ":</b> " + feature.properties[attribute] + " million</p>";
+
+    //bind popup to circle marker and offset popup
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-options.radius)
+    });
+
+    //event listeners to open popup on hover
+    layer.on({
+        mouseover: function(){
+            this.openPopup();
+        },
+        mouseout: function(){
+            this.closePopup();
+        }
+    });
+
+    //return circle marker to the L.geoJson pointToLayer options
+    return layer;
+};
+
+//create circle markers for point features to map
+function createPropSymbols(data, map){
+
+    //create a Leaflet GeoJSON layer and places it on map
+    L.geoJson(data, {
+        pointToLayer: pointToLayer
+    }).addTo(map);
+  };
+
+
 //function to retrieve data and place on map
 function getData(map){
-
-//jQuery AJAX method to retieve data
+    //jQuery AJAX method to retieve data
     $.ajax("data/MegaCities.geojson", {
         dataType: "json",
         success: function(response){
-
-            //create marker options
-            var geojsonMarkerOptions = {
-               radius: 5,
-               fillColor: "#76EE00",
-               color: "#000",
-               weight: 1,
-               opacity: 1,
-               fillOpacity: 0.8
-            };
-
-        //create a Leaflet GeoJSON layer and places it on map
-        L.geoJson(response, {
-            pointToLayer: function(feature, latlng){
-                return L.circleMarker(latlng, geojsonMarkerOptions)
-            }
-
-
-        }).addTo(map);
+            //call function to create proportional symbols
+            console.log(response.features)
+            createPropSymbols(response, map);
         }
     });
 };
