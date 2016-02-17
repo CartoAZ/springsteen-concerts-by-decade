@@ -1,3 +1,8 @@
+/*data tabulated from concert lists at http://www.brucespringsteen.it/ and brucesprinsteen.net. Represents concert location
+for last 14 tours for stops in US and Canada. Each temporal property includes counts for two consecutive tours. */
+
+
+
 {
   "type": "FeatureCollection",
   "features": [
