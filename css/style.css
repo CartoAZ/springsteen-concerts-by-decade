@@ -1,8 +1,30 @@
 /*This is my CSS file! */
 #map {
     height: 400px;
+    width: 70%;
+    display: inline-block;
 }
 
+#panel {
+    width: 16%;
+    padding: 20px;
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    line-height: 42px;
+}
+
+.range-slider {
+    width: 50%;
+}
+
+#forward {
+    float: right;
+}
+
+#reverse {
+    float: left;
+}
 /*styling for leaflet popups*/
 .leaflet-popup-content p {
     margin: 0.2em 0;
