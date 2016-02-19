@@ -62,16 +62,16 @@ function pointToLayer(feature, latlng, attributes){
     var layer = L.circleMarker(latlng, options);
 
     //original popupContent change to panelContent
-    var panelContent = "<p><b>State:</b> " + feature.properties.State + "</p>";
+    var popupContent = "<p><b>State:</b> " + feature.properties.State + "</p>";
 
     //add formatted attribute to panel content string
     var year1 = attribute.split("_")[0];
     var year2 = attribute.split("_")[1];
-    panelContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
+    popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
 
 
-    //build popup content string
-    var popupContent = feature.properties.State
+    // //build popup content string
+    // var popupContent = feature.properties.State
 
     //bind popup to circle marker and offset popup
     layer.bindPopup(popupContent, {
@@ -87,9 +87,9 @@ function pointToLayer(feature, latlng, attributes){
         mouseout: function(){
             this.closePopup();
         },
-        click: function(){
-            $("#panel").html(panelContent);
-        }
+        // click: function(){
+        //     $("#panel").html(panelContent);
+        // }
     });
 
     //return circle marker to the L.geoJson pointToLayer options
@@ -119,7 +119,7 @@ function updatePropSymbols(map, attribute){
             layer.setRadius(radius);
 
             //add city to popup content string
-            var popupContent = "<p><b>State:</b> " + props.City + "</p>";
+            var popupContent = "<p><b>State:</b> " + props.State + "</p>";
 
             //add formatted attribute to panel content string
             var year1 = attribute.split("_")[0];
@@ -226,16 +226,8 @@ function createFilter(map, tours){
 
         div.innerHTML = dropdown
 
-        div.firstChild.onmousedown = div.firstChild.ondblclick;
+        div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
         console.log(div);
-        console.log($('.info legend leaflet-control'))
-
-        $('.info legend leaflet-control').dblclick(function(){
-            //retrieve index value before click
-            var index = $('.range-slider').val();
-            console.log(index);
-            console.log($(this).attr('id'));
-          });
 
         return div;
     };legend.addTo(map);
@@ -262,7 +254,7 @@ function processTours(data){
 
 function filterRetrieve(map, attributes){
     //click listener for buttons
-    $('.info legend leaflet-control').click(function(){
+    $('#info legend leaflet-control').dblclick(function(){
         //retrieve index value before click
         var index = $('.range-slider').val();
         console.log(index);
