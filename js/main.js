@@ -30,7 +30,7 @@ function createMap(){
 //calculate the radius of each proportional symbols
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
-    var scalFactor = 50;
+    var scalFactor = 30;
     //area based on attribute value and scale factor
     var area = attValue * scalFactor;
     //radius calculated based on area
@@ -107,32 +107,32 @@ function createPropSymbols(data, map, attributes){
     }).addTo(map);
   };
 
-  //function to udpate the attribute based on user inputs (i.e., clicking and sliding)
-  function updatePropSymbols(map, attribute){
-      map.eachLayer(function(layer){
-          if (layer.feature && layer.feature.properties[attribute]){
-              //access feature properties
-              var props = layer.feature.properties;
+//function to udpate the attribute based on user inputs (i.e., clicking and sliding)
+function updatePropSymbols(map, attribute){
+    map.eachLayer(function(layer){
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
 
-              //update each feature's radius based on new attribute values
-              var radius = calcPropRadius(props[attribute]);
-              layer.setRadius(radius);
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
 
-              //add city to popup content string
-              var popupContent = "<p><b>State:</b> " + props.City + "</p>";
+            //add city to popup content string
+            var popupContent = "<p><b>State:</b> " + props.City + "</p>";
 
-              //add formatted attribute to panel content string
-              var year1 = attribute.split("_")[0];
-              var year2 = attribute.split("_")[1];
-              popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + props[attribute] + " </p>";
+            //add formatted attribute to panel content string
+            var year1 = attribute.split("_")[0];
+            var year2 = attribute.split("_")[1];
+            popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + props[attribute] + " </p>";
 
-              //replace the layer popup
-              layer.bindPopup(popupContent, {
-                  offset: new L.Point(0,-radius)
-              });
-          }
-      })
-  };
+            //replace the layer popup
+            layer.bindPopup(popupContent, {
+                offset: new L.Point(0,-radius)
+            });
+        }
+    })
+};
 
 
 //function to create sequence controls
@@ -142,7 +142,7 @@ function createSequenceControls(map, attributes){
 
       //set slider attributes
       $('.range-slider').attr({
-          max: 6,
+          max: 4,
           min: 0,
           value: 0,
           step: 1
@@ -162,11 +162,11 @@ function createSequenceControls(map, attributes){
               index++;
 
               //if this will make it go over the last attribute, return to first attribute
-              index = index > 6 ? 0 : index;
+              index = index > 4 ? 0 : index;
           } else if ($(this).attr('id') == 'reverse'){
               index--;
               //if this will make it go below first attribute, return to last attribute
-              index = index < 0 ? 6 : index;
+              index = index < 0 ? 4 : index;
           };
           //updates the slider based on clicking buttons
           $('.range-slider').val(index);
@@ -204,15 +204,138 @@ function processData(data){
     return attributes;
 };
 
+//function to create dropdown filter menu
+function createFilter(map, tours){
+    //variable to hold dropdown
+    var legend = L.control({position: 'topright'});
+
+    //not sure what this does??
+    legend.onAdd = function (map) {
+
+        //creates a div element to add to map
+        var div = L.DomUtil.create('div', 'info legend');
+
+        //variable to hold HTML string
+        var dropdown = '<select><option>Select a Tour</option>'
+
+        //for loop to add each tour from 'tours' array to dropdown menu
+        for (i = 19; i > -1; i--){
+            dropdown += '<option>' + tours[i] + '</option>'
+        };
+        dropdown += '</select>';
+
+        div.innerHTML = dropdown
+
+        div.firstChild.onmousedown = div.firstChild.ondblclick;
+        console.log(div);
+        console.log($('.info legend leaflet-control'))
+
+        $('.info legend leaflet-control').dblclick(function(){
+            //retrieve index value before click
+            var index = $('.range-slider').val();
+            console.log(index);
+            console.log($(this).attr('id'));
+          });
+
+        return div;
+    };legend.addTo(map);
+};
+
+function processTours(data){
+    //empty array to hold attributes
+    var tours = [];
+
+    //properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    //push each attribute name into attributes array
+    for (var attribute in properties) {
+        //only take attributes with population values
+        if (attribute.indexOf(" ") > -1){
+            tours.push(attribute);
+        };
+    };
+
+    //passes attributes back to anonymous callback function to add to variable
+    return tours;
+}
+
+function filterRetrieve(map, attributes){
+    //click listener for buttons
+    $('.info legend leaflet-control').click(function(){
+        //retrieve index value before click
+        var index = $('.range-slider').val();
+        console.log(index);
+        console.log($(this).attr('id'));
+      });
+    //     if ($(this).attr('id') == 'forward'){
+    //         index++;
+    //
+    //         //if this will make it go over the last attribute, return to first attribute
+    //         index = index > 4 ? 0 : index;
+    //     } else if ($(this).attr('id') == 'reverse'){
+    //         index--;
+    //         //if this will make it go below first attribute, return to last attribute
+    //         index = index < 0 ? 4 : index;
+    //     };
+    //     //updates the slider based on clicking buttons
+    //     $('.range-slider').val(index);
+    //
+    //     //pass new index to function so it can update prop symbols accordingly
+    //     updatePropSymbols(map, attributes[index]);
+    // });
+    // //input listener for slider
+    // $('.range-slider').on('input', function(){
+    //     //retrieve new index value
+    //     var index = $(this).val();
+    //
+    //     //pass new index to function so it can update prop symbols accordingly
+    //     updatePropSymbols(map, attributes[index]);
+    // });
+}
+
+
+function filterPropSymbols(map, attribute){
+    map.eachLayer(function(layer){
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
+
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
+
+            //add city to popup content string
+            var popupContent = "<p><b>Filtered</b> " + props.State + "</p>";
+
+            // //add formatted attribute to panel content string
+            // var year1 = attribute.split("_")[0];
+            // var year2 = attribute.split("_")[1];
+            // popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + props[attribute] + " </p>";
+
+            //replace the layer popup
+            layer.bindPopup(popupContent, {
+                offset: new L.Point(0,-radius)
+            });
+        }
+    })
+
+}
+
+
+
 //function to retrieve data and place on map
 function getData(map){
     //jQuery AJAX method to retieve data
-    $.ajax("data/springsteenByState.geojson", {
+    $.ajax("data/springsteenStateDecade.goejson", {
         dataType: "json",
         success: function(response){
           //create attributes array
           var attributes = processData(response);
 
+          var tours = processTours(response);
+
+          createFilter(map, tours);
           //call function to create proportional symbols
           createPropSymbols(response, map, attributes);
           //call function to create sequence controls
