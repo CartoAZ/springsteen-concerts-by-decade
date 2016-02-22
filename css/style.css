@@ -1,6 +1,6 @@
 /*This is my CSS file! */
 #map {
-    height: 400px;
+    height: 600px;
     width: 70%;
     display: inline-block;
 }
@@ -28,5 +28,5 @@
 /*styling for leaflet popups*/
 .leaflet-popup-content p {
     margin: 0.2em 0;
-    color: green;
+    color: black;
 }

@@ -61,17 +61,17 @@ function pointToLayer(feature, latlng, attributes){
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
-    //original popupContent change to panelContent
-    var panelContent = "<p><b>State:</b> " + feature.properties.State + "</p>";
+    //define text to be in popup
+    var popupContent = "<p><b>State:</b> " + feature.properties.FullState + "</p>";
 
     //add formatted attribute to panel content string
     var year1 = attribute.split("_")[0];
     var year2 = attribute.split("_")[1];
-    panelContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
+    popupContent += "<p><b>Concerts in " + feature.properties.State + " between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
 
 
     //build popup content string
-    var popupContent = feature.properties.State
+    // var popupContent = feature.properties.State
 
     //bind popup to circle marker and offset popup
     layer.bindPopup(popupContent, {
@@ -86,10 +86,10 @@ function pointToLayer(feature, latlng, attributes){
         },
         mouseout: function(){
             this.closePopup();
-        },
-        click: function(){
-            $("#panel").html(panelContent);
         }
+        // click: function(){
+        //     $("#panel").html(panelContent);
+        // }
     });
 
     //return circle marker to the L.geoJson pointToLayer options
@@ -119,12 +119,12 @@ function createPropSymbols(data, map, attributes){
               layer.setRadius(radius);
 
               //add city to popup content string
-              var popupContent = "<p><b>State:</b> " + props.City + "</p>";
+              var popupContent = "<p><b>State:</b> " + props.FullState + "</p>";
 
               //add formatted attribute to panel content string
               var year1 = attribute.split("_")[0];
               var year2 = attribute.split("_")[1];
-              popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + props[attribute] + " </p>";
+              popupContent += "<p><b>Concerts in " + props.State + " between " + year1 + " and " + year2 + ":</b> " + props[attribute] + "</p>";
 
               //replace the layer popup
               layer.bindPopup(popupContent, {
@@ -142,7 +142,7 @@ function createSequenceControls(map, attributes){
 
       //set slider attributes
       $('.range-slider').attr({
-          max: 6,
+          max: 4,
           min: 0,
           value: 0,
           step: 1
@@ -162,11 +162,11 @@ function createSequenceControls(map, attributes){
               index++;
 
               //if this will make it go over the last attribute, return to first attribute
-              index = index > 6 ? 0 : index;
+              index = index > 4 ? 0 : index;
           } else if ($(this).attr('id') == 'reverse'){
               index--;
               //if this will make it go below first attribute, return to last attribute
-              index = index < 0 ? 6 : index;
+              index = index < 0 ? 4 : index;
           };
           //updates the slider based on clicking buttons
           $('.range-slider').val(index);
