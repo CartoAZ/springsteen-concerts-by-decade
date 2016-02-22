@@ -184,7 +184,6 @@ function createSequenceControls(map, attributes){
       });
 };
 
-
 function processData(data){
     //empty array to hold attributes
     var attributes = [];
@@ -215,23 +214,23 @@ function createFilter(map, tours){
         //creates a div element to add to map
         var div = L.DomUtil.create('div', 'info legend');
 
-        //variable to hold HTML string
+        //variable to hold HTML string; add numeric value to reference index in tours array
         var dropdown = '<select id="list"><option value=20>Select a Tour</option>'
 
         //for loop to add each tour from 'tours' array to dropdown menu
         for (i = 19; i > -1; i--){
 
-          dropdown += '<option value="' + i + '">' + tours[i] + '</option>'
+          dropdown += '<option class="tour" value="' + i + '">' + tours[i] + '</option>'
         };
         dropdown += '</select>';
 
+        //adds HTML string fromd dropdown to innerHTML of div
         div.innerHTML = dropdown
 
+        //what does this do??????
         div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
-        // console.log(dropdown);
+
         return div;
-
-
     };legend.addTo(map);
 };
 
@@ -256,7 +255,7 @@ function processTours(data){
 
 function filterIndex(map, tours){
     //click listener for filter list
-    $('#list').click(function(){
+    $('#list').change(function(){
       var index = $('#list').val();
       // console.log(map);
       // console.log(tours);
@@ -306,7 +305,7 @@ function updateFilter(map, attribute){
         if (layer.feature && layer.feature.properties[attribute]){
             //access feature properties
             var props = layer.feature.properties;
-            console.log(props[attribute]);
+
             //update each feature's radius based on new attribute values
             var radius = calcPropRadius(props[attribute]);
             layer.setRadius(radius);
