@@ -97,12 +97,12 @@ function pointToLayer(feature, latlng, attributes){
 };
 
 //create circle markers for point features to map
-function createPropSymbols(data, map, attributes){
+function createPropSymbols(data, map, attributes, tours){
 
     //create a Leaflet GeoJSON layer and places it on map
     L.geoJson(data, {
       pointToLayer: function(feature, latlng){
-          return pointToLayer(feature, latlng, attributes);
+          return pointToLayer(feature, latlng, attributes, tours);
       }
     }).addTo(map);
   };
@@ -216,20 +216,22 @@ function createFilter(map, tours){
         var div = L.DomUtil.create('div', 'info legend');
 
         //variable to hold HTML string
-        var dropdown = '<select><option>Select a Tour</option>'
+        var dropdown = '<select id="list"><option value=20>Select a Tour</option>'
 
         //for loop to add each tour from 'tours' array to dropdown menu
         for (i = 19; i > -1; i--){
-            dropdown += '<option>' + tours[i] + '</option>'
+
+          dropdown += '<option value="' + i + '">' + tours[i] + '</option>'
         };
         dropdown += '</select>';
 
         div.innerHTML = dropdown
 
         div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
-        console.log(div);
-
+        // console.log(dropdown);
         return div;
+
+
     };legend.addTo(map);
 };
 
@@ -252,16 +254,28 @@ function processTours(data){
     return tours;
 }
 
-function filterRetrieve(map, attributes){
-    //click listener for buttons
-    $('#info legend leaflet-control').dblclick(function(){
-        //retrieve index value before click
-        var index = $('.range-slider').val();
-        console.log(index);
-        console.log($(this).attr('id'));
-      });
-    //     if ($(this).attr('id') == 'forward'){
-    //         index++;
+function filterIndex(map, tours){
+    //click listener for filter list
+    $('#list').click(function(){
+      var index = $('#list').val();
+      // console.log(map);
+      // console.log(tours);
+      // console.log(index);
+      console.log(tours[index]);
+      updateFilter(map, tours[index]);
+    });
+      // console.log(index);
+      // $( "select" ).change( displayVals );
+      // displayVals(index);
+        // var a = $('select.list option:selected').val();
+        // console.log(a);
+        // retrieve index value before click
+        // var index = $('.range-slider').val();
+        // console.log(index);
+        // console.log($(this).attr('id'));
+
+        // if ($(this).attr('id') == 'forward'){
+        //     index++;
     //
     //         //if this will make it go over the last attribute, return to first attribute
     //         index = index > 4 ? 0 : index;
@@ -287,12 +301,12 @@ function filterRetrieve(map, attributes){
 }
 
 
-function filterPropSymbols(map, attribute){
+function updateFilter(map, attribute){
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
             //access feature properties
             var props = layer.feature.properties;
-
+            console.log(props[attribute]);
             //update each feature's radius based on new attribute values
             var radius = calcPropRadius(props[attribute]);
             layer.setRadius(radius);
@@ -329,9 +343,11 @@ function getData(map){
 
           createFilter(map, tours);
           //call function to create proportional symbols
-          createPropSymbols(response, map, attributes);
+          createPropSymbols(response, map, attributes, tours);
           //call function to create sequence controls
           createSequenceControls(map, attributes);
+
+          filterIndex(map, tours);
         }
     });
 };
