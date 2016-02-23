@@ -60,10 +60,10 @@ function pointToLayer(feature, latlng, attributes){
     //define text to be in popup
     var popupContent = "<p><b>State:</b> " + feature.properties.FullState + "</p>";
 
+
     //add formatted attribute to popup content string
     var year1 = attribute.split("_")[0];
     var year2 = attribute.split("_")[1];
-
     popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
 
     //bind popup to circle marker and offset popup
@@ -81,7 +81,6 @@ function pointToLayer(feature, latlng, attributes){
             this.closePopup();
         }
     });
-
     //return circle marker to the L.geoJson pointToLayer options
     return layer;
 };
@@ -276,7 +275,6 @@ function filterIndex(map, tours){
     //click listener for filter list
     $('#list').change(function(){
       var index = $('#list').val();
-
       //update prop symbols based on new filter choice
       updateFilter(map, tours[index]);
     });
@@ -316,6 +314,7 @@ function filterIndex(map, tours){
     // });
 }
 
+
 //NEED TO UPDATE FILTER POPUP CONTENT
 function updateFilter(map, attribute){
     map.eachLayer(function(layer){
@@ -341,7 +340,6 @@ function updateFilter(map, attribute){
             });
         }
     })
-
 }
 
 //function to retrieve data and place on map
