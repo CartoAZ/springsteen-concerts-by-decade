@@ -4,24 +4,17 @@ function createMap(){
     //creates our map with default center/zoom
     var map = L.map('map', {
         center: [42, -96],
-        zoom: 3
+        zoom: 4
     });
 
-    // L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}.{ext}', {
-    //   	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    //   	subdomains: 'abcd',
-    //   	minZoom: 0,
-    //   	maxZoom: 20,
-    //   	ext: 'png'
-    // }).addTo(map);
-
-    L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
-	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-	subdomains: 'abcd',
-	minZoom: 0,
-	maxZoom: 20,
-	ext: 'png'
-  }).addTo(map);
+//loads tilelayer onto map
+L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
+    	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    	subdomains: 'abcd',
+    	minZoom: 0,
+    	maxZoom: 20,
+    	ext: 'png'
+}).addTo(map);
 
 
     getData(map);
@@ -39,8 +32,11 @@ function calcPropRadius(attValue) {
     return radius;
 }
 
+//function to iterate over each record in geojson and create a point marker for it
+//also creates/defines popup content for each point marker
 function pointToLayer(feature, latlng, attributes){
-    //determines which attribute to visualize with proportional symbols
+
+    //determines which attribute to visualize with proportional symbols upon loading map
     var attribute = attributes[0];
 
     //create marker options
@@ -64,16 +60,12 @@ function pointToLayer(feature, latlng, attributes){
     //define text to be in popup
     var popupContent = "<p><b>State:</b> " + feature.properties.FullState + "</p>";
 
-    //add formatted attribute to panel content string
+    //add formatted attribute to popup content string
     var year1 = attribute.split("_")[0];
     var year2 = attribute.split("_")[1];
     popupContent += "<p><b>Concerts in " + feature.properties.State + " between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
 
-
-    //build popup content string
-    // var popupContent = feature.properties.State
-
-    //bind popup to circle marker and offset popup
+    //bind popup to circle marker and offset popup; remove 'x' to close from popup
     layer.bindPopup(popupContent, {
         offset: new L.Point(0,-options.radius),
         closeButton: false
@@ -107,36 +99,50 @@ function createPropSymbols(data, map, attributes){
     }).addTo(map);
   };
 
-  //function to udpate the attribute based on user inputs (i.e., clicking and sliding)
-  function updatePropSymbols(map, attribute){
-      map.eachLayer(function(layer){
-          if (layer.feature && layer.feature.properties[attribute]){
-              //access feature properties
-              var props = layer.feature.properties;
+//function to udpate the attribute based on user inputs (i.e., clicking and sliding)
+function updatePropSymbols(map, attribute){
+    //iterates through each layer (i.e., point) on map
+    map.eachLayer(function(layer){
+        //conditional to make sure we're processing a layer with data
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
 
-              //update each feature's radius based on new attribute values
-              var radius = calcPropRadius(props[attribute]);
-              layer.setRadius(radius);
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
 
-              //add city to popup content string
-              var popupContent = "<p><b>State:</b> " + props.FullState + "</p>";
+            //add appropriate popup content based on user input
+            var popupContent = "<p><b>State:</b> " + props.FullState + "</p>";
 
-              //add formatted attribute to panel content string
-              var year1 = attribute.split("_")[0];
-              var year2 = attribute.split("_")[1];
-              popupContent += "<p><b>Concerts in " + props.State + " between " + year1 + " and " + year2 + ":</b> " + props[attribute] + "</p>";
+            //add formatted attribute to popup content string
+            var year1 = attribute.split("_")[0];
+            var year2 = attribute.split("_")[1];
+            popupContent += "<p><b>Concerts in " + props.State + " between " + year1 + " and " + year2 + ":</b> " + props[attribute] + "</p>";
 
-              //replace the layer popup
-              layer.bindPopup(popupContent, {
-                  offset: new L.Point(0,-radius)
-              });
-          }
-      })
-  };
-
+            //replace the layer popup
+            layer.bindPopup(popupContent, {
+                offset: new L.Point(0,-radius),
+                closeButton: false
+            });
+        }
+    })
+};
 
 //function to create sequence controls
 function createSequenceControls(map, attributes){
+
+      //trying to add dynamic title telling user what years' data they are on
+      // var year1 = attributes[0].split("_")[0];
+      // var year2 = attributes[0].split("_")[1];
+      // index = attributes[0];
+      // var titleLabel = '<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>';
+      //
+      //
+      // $("#title").html(titleLabel);
+
+      // updatePanelLabel(map, index);
+
       //create range input element, i.e. a slider
       $('#panel').append('<input class="range-slider" type="range">');
 
@@ -146,8 +152,8 @@ function createSequenceControls(map, attributes){
           min: 0,
           value: 0,
           step: 1
-
       });
+
       //add the skip buttons to range slider
       $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
       $('#panel').append('<button class="skip" id="forward">Skip</button>');
@@ -163,6 +169,7 @@ function createSequenceControls(map, attributes){
 
               //if this will make it go over the last attribute, return to first attribute
               index = index > 4 ? 0 : index;
+
           } else if ($(this).attr('id') == 'reverse'){
               index--;
               //if this will make it go below first attribute, return to last attribute
@@ -173,6 +180,9 @@ function createSequenceControls(map, attributes){
 
           //pass new index to function so it can update prop symbols accordingly
           updatePropSymbols(map, attributes[index]);
+
+          // //trying to pass new index to function to update label
+          // updateTitle(map, attributes[index]);
       });
       //input listener for slider
       $('.range-slider').on('input', function(){
@@ -184,6 +194,16 @@ function createSequenceControls(map, attributes){
       });
 };
 
+// //function to udpate HTML string on panel telling user what years' data are being displayed
+// function updateTitle(map, attribute, titleContent){
+//
+//
+//     //split attribute title into 'from' and 'to' years
+//     var year1 = attribute.split("_")[0];
+//     var year2 = attribute.split("_")[1];
+//     $("#title").html('<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>');
+//     // $("#panel").append('<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>');
+// }
 
 function processData(data){
     //empty array to hold attributes
@@ -199,7 +219,6 @@ function processData(data){
             attributes.push(attribute);
         };
     };
-
     //passes attributes back to anonymous callback function to add to variable
     return attributes;
 };
