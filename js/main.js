@@ -23,7 +23,7 @@ L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', 
 //calculate the radius of each proportional symbols
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
-    var scalFactor = 50;
+    var scalFactor = 30;
     //area based on attribute value and scale factor
     var area = attValue * scalFactor;
     //radius calculated based on area
@@ -63,9 +63,10 @@ function pointToLayer(feature, latlng, attributes){
     //add formatted attribute to popup content string
     var year1 = attribute.split("_")[0];
     var year2 = attribute.split("_")[1];
-    popupContent += "<p><b>Concerts in " + feature.properties.State + " between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
 
-    //bind popup to circle marker and offset popup; remove 'x' to close from popup
+    popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
+
+    //bind popup to circle marker and offset popup
     layer.bindPopup(popupContent, {
         offset: new L.Point(0,-options.radius),
         closeButton: false
@@ -79,9 +80,6 @@ function pointToLayer(feature, latlng, attributes){
         mouseout: function(){
             this.closePopup();
         }
-        // click: function(){
-        //     $("#panel").html(panelContent);
-        // }
     });
 
     //return circle marker to the L.geoJson pointToLayer options
@@ -89,12 +87,12 @@ function pointToLayer(feature, latlng, attributes){
 };
 
 //create circle markers for point features to map
-function createPropSymbols(data, map, attributes){
+function createPropSymbols(data, map, attributes, tours){
 
     //create a Leaflet GeoJSON layer and places it on map
     L.geoJson(data, {
       pointToLayer: function(feature, latlng){
-          return pointToLayer(feature, latlng, attributes);
+          return pointToLayer(feature, latlng, attributes, tours);
       }
     }).addTo(map);
   };
@@ -130,6 +128,7 @@ function updatePropSymbols(map, attribute){
 };
 
 //function to create sequence controls
+//need to add something that when you adjust slider, it changes dropdown back to Select a tour
 function createSequenceControls(map, attributes){
 
       //trying to add dynamic title telling user what years' data they are on
@@ -223,6 +222,128 @@ function processData(data){
     return attributes;
 };
 
+//function to create dropdown filter menu
+function createFilter(map, tours){
+    //variable to hold dropdown
+    var legend = L.control({position: 'topright'});
+
+    //not sure what this does??
+    legend.onAdd = function (map) {
+
+        //creates a div element to add to map
+        var div = L.DomUtil.create('div', 'info legend');
+
+        //variable to hold HTML string; add numeric value to reference index in tours array
+        var dropdown = '<select id="list"><option value=20>Select a Tour</option>'
+
+        //for loop to add each tour from 'tours' array to dropdown menu
+        for (i = 19; i > -1; i--){
+
+          dropdown += '<option class="tour" value="' + i + '">' + tours[i] + '</option>'
+        };
+        dropdown += '</select>';
+
+        //adds HTML string fromd dropdown to innerHTML of div
+        div.innerHTML = dropdown
+
+        //what does this do??????
+        div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+
+        return div;
+    };legend.addTo(map);
+};
+
+function processTours(data){
+    //empty array to hold attributes
+    var tours = [];
+
+    //properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    //push each attribute name into attributes array
+    for (var attribute in properties) {
+        //only take attributes with population values
+        if (attribute.indexOf(" ") > -1){
+            tours.push(attribute);
+        };
+    };
+
+    //passes attributes back to anonymous callback function to add to variable
+    return tours;
+}
+
+function filterIndex(map, tours){
+    //click listener for filter list
+    $('#list').change(function(){
+      var index = $('#list').val();
+
+      //update prop symbols based on new filter choice
+      updateFilter(map, tours[index]);
+    });
+      // console.log(index);
+      // $( "select" ).change( displayVals );
+      // displayVals(index);
+        // var a = $('select.list option:selected').val();
+        // console.log(a);
+        // retrieve index value before click
+        // var index = $('.range-slider').val();
+        // console.log(index);
+        // console.log($(this).attr('id'));
+
+        // if ($(this).attr('id') == 'forward'){
+        //     index++;
+    //
+    //         //if this will make it go over the last attribute, return to first attribute
+    //         index = index > 4 ? 0 : index;
+    //     } else if ($(this).attr('id') == 'reverse'){
+    //         index--;
+    //         //if this will make it go below first attribute, return to last attribute
+    //         index = index < 0 ? 4 : index;
+    //     };
+    //     //updates the slider based on clicking buttons
+    //     $('.range-slider').val(index);
+    //
+    //     //pass new index to function so it can update prop symbols accordingly
+    //     updatePropSymbols(map, attributes[index]);
+    // });
+    // //input listener for slider
+    // $('.range-slider').on('input', function(){
+    //     //retrieve new index value
+    //     var index = $(this).val();
+    //
+    //     //pass new index to function so it can update prop symbols accordingly
+    //     updatePropSymbols(map, attributes[index]);
+    // });
+}
+
+//NEED TO UPDATE FILTER POPUP CONTENT
+function updateFilter(map, attribute){
+    map.eachLayer(function(layer){
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
+
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
+
+            //add city to popup content string
+            var popupContent = "<p><b>Filtered</b> " + props.State + "</p>";
+
+            // //add formatted attribute to panel content string
+            // var year1 = attribute.split("_")[0];
+            // var year2 = attribute.split("_")[1];
+            // popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + props[attribute] + " </p>";
+
+            //replace the layer popup
+            layer.bindPopup(popupContent, {
+                offset: new L.Point(0,-radius)
+            });
+        }
+    })
+
+}
+
 //function to retrieve data and place on map
 function getData(map){
     //jQuery AJAX method to retieve data
@@ -232,10 +353,15 @@ function getData(map){
           //create attributes array
           var attributes = processData(response);
 
+          var tours = processTours(response);
+
+          createFilter(map, tours);
           //call function to create proportional symbols
-          createPropSymbols(response, map, attributes);
+          createPropSymbols(response, map, attributes, tours);
           //call function to create sequence controls
           createSequenceControls(map, attributes);
+
+          filterIndex(map, tours);
         }
     });
 };
