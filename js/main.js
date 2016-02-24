@@ -9,11 +9,11 @@ function createMap(){
 
 //loads tilelayer onto map
 L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
-    	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    	subdomains: 'abcd',
-    	minZoom: 0,
-    	maxZoom: 20,
-    	ext: 'png'
+  	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  	subdomains: 'abcd',
+  	minZoom: 0,
+  	maxZoom: 20,
+  	ext: 'png'
 }).addTo(map);
 
 
@@ -30,7 +30,32 @@ function calcPropRadius(attValue) {
     var radius = Math.sqrt(area/Math.PI);
 
     return radius;
-}
+};
+
+function createPopup(properties, attribute, layer, radius){
+    //checks for underscore to format popups when viewing data by decade vs format popup for
+    //individual tours that don't have a from/to date
+    if (attribute.indexOf("_") > -1){
+        //define text to be in popup
+        var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
+
+        //add formatted attribute to popup content string
+        var year1 = attribute.split("_")[0];
+        var year2 = attribute.split("_")[1];
+        popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + properties[attribute] + "</p>";
+    } else {
+      //define text to be in popup
+      var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
+
+      //add formatted attribute to popup content string
+      popupContent += "<p><b>Concerts on " + attribute + " Tour in " + properties.State + ":</b> " + properties[attribute] + "</p>";
+    };
+    //bind popup to circle marker and offset popup
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-radius),
+        closeButton: false
+    });
+};
 
 //function to iterate over each record in geojson and create a point marker for it
 //also creates/defines popup content for each point marker
@@ -57,20 +82,8 @@ function pointToLayer(feature, latlng, attributes){
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
-    //define text to be in popup
-    var popupContent = "<p><b>State:</b> " + feature.properties.FullState + "</p>";
-
-
-    //add formatted attribute to popup content string
-    var year1 = attribute.split("_")[0];
-    var year2 = attribute.split("_")[1];
-    popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + feature.properties[attribute] + "</p>";
-
-    //bind popup to circle marker and offset popup
-    layer.bindPopup(popupContent, {
-        offset: new L.Point(0,-options.radius),
-        closeButton: false
-    });
+    //call function and sent necessary data to create popup for circleMarkers
+    createPopup(feature.properties, attribute, layer, options.radius);
 
     //event listeners to open popup on hover
     layer.on({
@@ -94,13 +107,13 @@ function createPropSymbols(data, map, attributes, tours){
           return pointToLayer(feature, latlng, attributes, tours);
       }
     }).addTo(map);
-  };
+};
 
 //function to udpate the attribute based on user inputs (i.e., clicking and sliding)
 function updatePropSymbols(map, attribute){
     //iterates through each layer (i.e., point) on map
     map.eachLayer(function(layer){
-        //conditional to make sure we're processing a layer with data
+        //conditional to make sure we're processing a layer with an attribute and ignore basemap
         if (layer.feature && layer.feature.properties[attribute]){
             //access feature properties
             var props = layer.feature.properties;
@@ -109,20 +122,9 @@ function updatePropSymbols(map, attribute){
             var radius = calcPropRadius(props[attribute]);
             layer.setRadius(radius);
 
-            //add appropriate popup content based on user input
-            var popupContent = "<p><b>State:</b> " + props.FullState + "</p>";
-
-            //add formatted attribute to popup content string
-            var year1 = attribute.split("_")[0];
-            var year2 = attribute.split("_")[1];
-            popupContent += "<p><b>Concerts in " + props.State + " between " + year1 + " and " + year2 + ":</b> " + props[attribute] + "</p>";
-
-            //replace the layer popup
-            layer.bindPopup(popupContent, {
-                offset: new L.Point(0,-radius),
-                closeButton: false
-            });
-        }
+            //call function and sent necessary data to create popup for circleMarkers
+            createPopup(props, attribute, layer, radius);
+        };
     })
 };
 
@@ -130,66 +132,132 @@ function updatePropSymbols(map, attribute){
 //need to add something that when you adjust slider, it changes dropdown back to Select a tour
 function createSequenceControls(map, attributes){
 
-      //trying to add dynamic title telling user what years' data they are on
-      // var year1 = attributes[0].split("_")[0];
-      // var year2 = attributes[0].split("_")[1];
-      // index = attributes[0];
-      // var titleLabel = '<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>';
-      //
-      //
-      // $("#title").html(titleLabel);
+    //trying to add dynamic title telling user what years' data they are on
+    // var year1 = attributes[0].split("_")[0];
+    // var year2 = attributes[0].split("_")[1];
+    // index = attributes[0];
+    // var titleLabel = '<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>';
+    //
+    //
+    // $("#title").html(titleLabel);
 
-      // updatePanelLabel(map, index);
+    // updatePanelLabel(map, index);
+    var SequenceControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
 
-      //create range input element, i.e. a slider
-      $('#panel').append('<input class="range-slider" type="range">');
+        onAdd: function(map) {
+            //create the container div with a particular class name
+            var container = L.DomUtil.create('div', 'sequence-control-container');
 
-      //set slider attributes
-      $('.range-slider').attr({
-          max: 4,
-          min: 0,
-          value: 0,
-          step: 1
-      });
+            //create range input element, i.e. a slider
+            $(container).append('<input class="range-slider" type="range">');
+            //set slider attributes
+            $('.range-slider').attr({
+                max: 4,
+                min: 0,
+                value: 0,
+                step: 1
+            });
 
-      //add the skip buttons to range slider
-      $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
-      $('#panel').append('<button class="skip" id="forward">Skip</button>');
-      $('#reverse').html('<img src="img/backward.png">');
-      $('#forward').html('<img src="img/forward.png">');
+            //add the skip buttons to range slider
+            $(container).append('<button class="skip" id="reverse" title="Reverse"><img src="img/backward.png"></button>');
+            $(container).append('<button class="skip" id="forward" title="Forward"><img src="img/forward.png"></button>');
 
-      //click listener for buttons
-      $('.skip').click(function(){
-          //retrieve index value before click
-          var index = $('.range-slider').val();
-          if ($(this).attr('id') == 'forward'){
-              index++;
+            //click listener for buttons
+            $('.skip').click(function(){
+                //retrieve index value before click
+                var index = $('.range-slider').val();
+                if ($(this).attr('id') == 'forward'){
+                    index++;
 
-              //if this will make it go over the last attribute, return to first attribute
-              index = index > 4 ? 0 : index;
+                    //if this will make it go over the last attribute, return to first attribute
+                    index = index > 4 ? 0 : index;
 
-          } else if ($(this).attr('id') == 'reverse'){
-              index--;
-              //if this will make it go below first attribute, return to last attribute
-              index = index < 0 ? 4 : index;
-          };
-          //updates the slider based on clicking buttons
-          $('.range-slider').val(index);
+                } else if ($(this).attr('id') == 'reverse'){
+                    index--;
+                    //if this will make it go below first attribute, return to last attribute
+                    index = index < 0 ? 4 : index;
+                };
+                //updates the slider based on clicking buttons
+                $('.range-slider').val(index);
 
-          //pass new index to function so it can update prop symbols accordingly
-          updatePropSymbols(map, attributes[index]);
+                //pass new index to function so it can update prop symbols accordingly
+                updatePropSymbols(map, attributes[index]);
 
-          // //trying to pass new index to function to update label
-          // updateTitle(map, attributes[index]);
-      });
-      //input listener for slider
-      $('.range-slider').on('input', function(){
-          //retrieve new index value
-          var index = $(this).val();
+                // //trying to pass new index to function to update label
+                // updateTitle(map, attributes[index]);
+            });
+            //input listener for slider
+            $('.range-slider').on('input', function(){
+                //retrieve new index value
+                var index = $(this).val();
 
-          //pass new index to function so it can update prop symbols accordingly
-          updatePropSymbols(map, attributes[index]);
-      });
+                //pass new index to function so it can update prop symbols accordingly
+                updatePropSymbols(map, attributes[index]);
+            });
+
+            //kill any mouse event listeners on the map
+            $(container).on('mousedown dblclick', function(e){
+                L.DomEvent.stopPropagation(e);
+            });
+
+            return container;
+        }
+    });
+
+    map.addControl(new SequenceControl());
+
+    // //create range input element, i.e. a slider
+    // $('#panel').append('<input class="range-slider" type="range">');
+    //
+    // //set slider attributes
+    // $('.range-slider').attr({
+    //     max: 4,
+    //     min: 0,
+    //     value: 0,
+    //     step: 1
+    // });
+    //
+    // //add the skip buttons to range slider
+    // $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
+    // $('#panel').append('<button class="skip" id="forward">Skip</button>');
+    // $('#reverse').html('<img src="img/backward.png">');
+    // $('#forward').html('<img src="img/forward.png">');
+    //
+    // //click listener for buttons
+    // $('.skip').click(function(){
+    //     //retrieve index value before click
+    //     var index = $('.range-slider').val();
+    //     if ($(this).attr('id') == 'forward'){
+    //         index++;
+    //
+    //         //if this will make it go over the last attribute, return to first attribute
+    //         index = index > 4 ? 0 : index;
+    //
+    //     } else if ($(this).attr('id') == 'reverse'){
+    //         index--;
+    //         //if this will make it go below first attribute, return to last attribute
+    //         index = index < 0 ? 4 : index;
+    //     };
+    //     //updates the slider based on clicking buttons
+    //     $('.range-slider').val(index);
+    //
+    //     //pass new index to function so it can update prop symbols accordingly
+    //     updatePropSymbols(map, attributes[index]);
+    //
+    //     // //trying to pass new index to function to update label
+    //     // updateTitle(map, attributes[index]);
+    // });
+    // //input listener for slider
+    // $('.range-slider').on('input', function(){
+    //     //retrieve new index value
+    //     var index = $(this).val();
+    //
+    //     //pass new index to function so it can update prop symbols accordingly
+    //     updatePropSymbols(map, attributes[index]);
+    // });
 };
 
 // //function to udpate HTML string on panel telling user what years' data are being displayed
@@ -326,21 +394,11 @@ function updateFilter(map, attribute){
             var radius = calcPropRadius(props[attribute]);
             layer.setRadius(radius);
 
-            //add city to popup content string
-            var popupContent = "<p><b>Filtered</b> " + props.State + "</p>";
-
-            // //add formatted attribute to panel content string
-            // var year1 = attribute.split("_")[0];
-            // var year2 = attribute.split("_")[1];
-            // popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + props[attribute] + " </p>";
-
-            //replace the layer popup
-            layer.bindPopup(popupContent, {
-                offset: new L.Point(0,-radius)
-            });
-        }
-    })
-}
+            //call function and send necessary data to create popup for circleMarkers
+            createPopup(props, attribute, layer, radius);
+        };
+    });
+};
 
 //function to retrieve data and place on map
 function getData(map){
@@ -348,18 +406,18 @@ function getData(map){
     $.ajax("data/springsteenByState.geojson", {
         dataType: "json",
         success: function(response){
-          //create attributes array
-          var attributes = processData(response);
+            //create attributes array
+            var attributes = processData(response);
 
-          var tours = processTours(response);
+            var tours = processTours(response);
 
-          createFilter(map, tours);
-          //call function to create proportional symbols
-          createPropSymbols(response, map, attributes, tours);
-          //call function to create sequence controls
-          createSequenceControls(map, attributes);
+            createFilter(map, tours);
+            //call function to create proportional symbols
+            createPropSymbols(response, map, attributes, tours);
+            //call function to create sequence controls
+            createSequenceControls(map, attributes);
 
-          filterIndex(map, tours);
+            filterIndex(map, tours);
         }
     });
 };
