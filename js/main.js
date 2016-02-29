@@ -4,7 +4,7 @@ function createMap(){
     //creates our map with default center/zoom
     var map = L.map('map', {
         center: [42, -96],
-        zoom: 4
+        zoom: 3
     });
 
 //loads tilelayer onto map
@@ -153,50 +153,10 @@ function createSequenceControls(map, attributes){
 
             //create range input element, i.e. a slider
             $(container).append('<input class="range-slider" type="range">');
-            //set slider attributes
-            $('.range-slider').attr({
-                max: 4,
-                min: 0,
-                value: 0,
-                step: 1
-            });
 
             //add the skip buttons to range slider
             $(container).append('<button class="skip" id="reverse" title="Reverse"><img src="img/backward.png"></button>');
-            $(container).append('<button class="skip" id="forward" title="Forward"><img src="img/forward.png"></button>');
-
-            //click listener for buttons
-            $('.skip').click(function(){
-                //retrieve index value before click
-                var index = $('.range-slider').val();
-                if ($(this).attr('id') == 'forward'){
-                    index++;
-
-                    //if this will make it go over the last attribute, return to first attribute
-                    index = index > 4 ? 0 : index;
-
-                } else if ($(this).attr('id') == 'reverse'){
-                    index--;
-                    //if this will make it go below first attribute, return to last attribute
-                    index = index < 0 ? 4 : index;
-                };
-                //updates the slider based on clicking buttons
-                $('.range-slider').val(index);
-
-                //pass new index to function so it can update prop symbols accordingly
-                updatePropSymbols(map, attributes[index]);
-
-                // //trying to pass new index to function to update label
-                // updateTitle(map, attributes[index]);
-            });
-            //input listener for slider
-            $('.range-slider').on('input', function(){
-                //retrieve new index value
-                var index = $(this).val();
-
-                //pass new index to function so it can update prop symbols accordingly
-                updatePropSymbols(map, attributes[index]);
-            });
+            $(container).append('<button class="skip" id="forward" title="Skip"><img src="img/forward.png"></button>');
 
             //kill any mouse event listeners on the map
             $(container).on('mousedown dblclick', function(e){
@@ -209,47 +169,47 @@ function createSequenceControls(map, attributes){
 
     map.addControl(new SequenceControl());
 
-    // //create range input element, i.e. a slider
-    // $('#panel').append('<input class="range-slider" type="range">');
-    //
-    // //set slider attributes
-    // $('.range-slider').attr({
-    //     max: 4,
-    //     min: 0,
-    //     value: 0,
-    //     step: 1
-    // });
-    //
-    // //add the skip buttons to range slider
-    // $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
-    // $('#panel').append('<button class="skip" id="forward">Skip</button>');
-    // $('#reverse').html('<img src="img/backward.png">');
-    // $('#forward').html('<img src="img/forward.png">');
-    //
-    // //click listener for buttons
-    // $('.skip').click(function(){
-    //     //retrieve index value before click
-    //     var index = $('.range-slider').val();
-    //     if ($(this).attr('id') == 'forward'){
-    //         index++;
-    //
-    //         //if this will make it go over the last attribute, return to first attribute
-    //         index = index > 4 ? 0 : index;
-    //
-    //     } else if ($(this).attr('id') == 'reverse'){
-    //         index--;
-    //         //if this will make it go below first attribute, return to last attribute
-    //         index = index < 0 ? 4 : index;
-    //     };
-    //     //updates the slider based on clicking buttons
-    //     $('.range-slider').val(index);
-    //
-    //     //pass new index to function so it can update prop symbols accordingly
-    //     updatePropSymbols(map, attributes[index]);
-    //
-    //     // //trying to pass new index to function to update label
-    //     // updateTitle(map, attributes[index]);
-    // });
+    //create range input element, i.e. a slider
+    $('#panel').append('<input class="range-slider" type="range">');
+
+    //set slider attributes
+    $('.range-slider').attr({
+        max: 4,
+        min: 0,
+        value: 0,
+        step: 1
+    });
+
+    //add the skip buttons to range slider
+    $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
+    $('#panel').append('<button class="skip" id="forward">Skip</button>');
+    $('#reverse').html('<img src="img/backward.png">');
+    $('#forward').html('<img src="img/forward.png">');
+
+    //click listener for buttons
+    $('.skip').click(function(){
+        //retrieve index value before click
+        var index = $('.range-slider').val();
+        if ($(this).attr('id') == 'forward'){
+            index++;
+
+            //if this will make it go over the last attribute, return to first attribute
+            index = index > 4 ? 0 : index;
+
+        } else if ($(this).attr('id') == 'reverse'){
+            index--;
+            //if this will make it go below first attribute, return to last attribute
+            index = index < 0 ? 4 : index;
+        };
+        //updates the slider based on clicking buttons
+        $('.range-slider').val(index);
+
+        //pass new index to function so it can update prop symbols accordingly
+        updatePropSymbols(map, attributes[index]);
+
+        // //trying to pass new index to function to update label
+        // updateTitle(map, attributes[index]);
+    });
     // //input listener for slider
     // $('.range-slider').on('input', function(){
     //     //retrieve new index value
