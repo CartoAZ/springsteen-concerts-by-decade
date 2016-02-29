@@ -124,6 +124,8 @@ function updatePropSymbols(map, attribute){
 
             //call function and sent necessary data to create popup for circleMarkers
             createPopup(props, attribute, layer, radius);
+
+            updateLegend(map, attribute);
         };
     })
 };
@@ -169,9 +171,6 @@ function createSequenceControls(map, attributes){
 
     map.addControl(new SequenceControl());
 
-    //create range input element, i.e. a slider
-    $('#panel').append('<input class="range-slider" type="range">');
-
     //set slider attributes
     $('.range-slider').attr({
         max: 4,
@@ -181,8 +180,6 @@ function createSequenceControls(map, attributes){
     });
 
     //add the skip buttons to range slider
-    $('#panel').append('<button class="skip" id="reverse">Reverse</button>');
-    $('#panel').append('<button class="skip" id="forward">Skip</button>');
     $('#reverse').html('<img src="img/backward.png">');
     $('#forward').html('<img src="img/forward.png">');
 
@@ -210,14 +207,15 @@ function createSequenceControls(map, attributes){
         // //trying to pass new index to function to update label
         // updateTitle(map, attributes[index]);
     });
-    // //input listener for slider
-    // $('.range-slider').on('input', function(){
-    //     //retrieve new index value
-    //     var index = $(this).val();
-    //
-    //     //pass new index to function so it can update prop symbols accordingly
-    //     updatePropSymbols(map, attributes[index]);
-    // });
+
+    //input listener for slider
+    $('.range-slider').on('input', function(){
+        //retrieve new index value
+        var index = $(this).val();
+
+        //pass new index to function so it can update prop symbols accordingly
+        updatePropSymbols(map, attributes[index]);
+    });
 };
 
 // //function to udpate HTML string on panel telling user what years' data are being displayed
@@ -360,15 +358,49 @@ function updateFilter(map, attribute){
     });
 };
 
+function createLegend(map,attributes){
+    var LegendControl = L.Control.extend({
+        options: {
+            position: 'bottomright'
+    },
+
+        onAdd: function(map){
+            // create the control container with a particular class name
+            var container = L.DomUtil.create('div', 'legend-control-container');
+
+            // add div to container for temporal legend
+            $(container).append('<div id="temporal-legend">');
+
+            return container;
+        }
+    });
+
+    map.addControl(new LegendControl());
+    updateLegend(map, attributes[0]);
+
+    // updateLegend(map,attributes[0]);
+};
+
+function updateLegend(map, attribute) {
+    //add formatted attribute to popup content string
+    var year1 = attribute.split("_")[0];
+    var year2 = attribute.split("_")[1];
+    var legendContent = year1 + " through " + year2;
+    console.log(legendContent)
+    $('#temporal-legend').html(legendContent);
+
+
+}
+
 //function to retrieve data and place on map
 function getData(map){
     //jQuery AJAX method to retieve data
     $.ajax("data/springsteenByState.geojson", {
         dataType: "json",
         success: function(response){
-            //create attributes array
+            //create/returns attributes array
             var attributes = processData(response);
-
+            //create/return tours array
             var tours = processTours(response);
 
             createFilter(map, tours);
@@ -378,6 +410,8 @@ function getData(map){
             createSequenceControls(map, attributes);
 
             filterIndex(map, tours);
+
+            createLegend(map, attributes);
         }
     });
 };
