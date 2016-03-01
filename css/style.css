@@ -4,13 +4,6 @@
     display: inline-block;
 }
 
-/*#title {*/
-    /*width: 16%;
-    padding: 10px;
-    display: inline-block;
-    vertical-align: middle;
-}*/
-
 .sequence-control-container, .legend-control-container {
     background-color: rgba(255, 255, 255, 0.8);
     padding: 10px;

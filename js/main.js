@@ -1,9 +1,14 @@
 //function to instantiate the Leaflet map
 function createMap(){
 
+    var southWest = L.latLng(21, -140);
+    var northEast = L.latLng(65, -44);
+    var bounds = L.latLngBounds(southWest, northEast);
+    console.log(bounds);
     //creates our map with default center/zoom
     var map = L.map('map', {
         center: [42, -96],
+        maxBounds: bounds,
         zoom: 3
     });
 
@@ -11,8 +16,8 @@ function createMap(){
 L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
   	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   	subdomains: 'abcd',
-  	minZoom: 0,
-  	maxZoom: 20,
+  	minZoom: 3,
+  	maxZoom: 7,
   	ext: 'png'
 }).addTo(map);
 
@@ -33,28 +38,34 @@ function calcPropRadius(attValue) {
 };
 
 function createPopup(properties, attribute, layer, radius){
-    //checks for underscore to format popups when viewing data by decade vs format popup for
-    //individual tours that don't have a from/to date
-    if (attribute.indexOf("_") > -1){
-        //define text to be in popup
-        var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
-
-        //add formatted attribute to popup content string
-        var year1 = attribute.split("_")[0];
-        var year2 = attribute.split("_")[1];
-        popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + properties[attribute] + "</p>";
+    //checks if the state has a 0 for the specified attribute
+    if(properties[attribute] == 0){
+        //removes popup for states that didn't have any concerts
+        layer.unbindPopup();
     } else {
-      //define text to be in popup
-      var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
+        //checks for underscore to format popups when viewing data by decade vs format popup for
+        //individual tours that don't have a from/to date
+        if (attribute.indexOf("_") > -1){
+            //define text to be in popup
+            var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
 
-      //add formatted attribute to popup content string
-      popupContent += "<p><b>Concerts on " + attribute + " Tour in " + properties.State + ":</b> " + properties[attribute] + "</p>";
-    };
-    //bind popup to circle marker and offset popup
-    layer.bindPopup(popupContent, {
-        offset: new L.Point(0,-radius),
-        closeButton: false
-    });
+            //add formatted attribute to popup content string
+            var year1 = attribute.split("_")[0];
+            var year2 = attribute.split("_")[1];
+            popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + properties[attribute] + "</p>";
+        } else {
+          //define text to be in popup
+          var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
+
+          //add formatted attribute to popup content string
+          popupContent += "<p><b>Concerts on " + attribute + " Tour in " + properties.State + ":</b> " + properties[attribute] + "</p>";
+        };
+        //bind popup to circle marker and offset popup
+        layer.bindPopup(popupContent, {
+            offset: new L.Point(0,-radius),
+            closeButton: false
+        });
+    }
 };
 
 //function to iterate over each record in geojson and create a point marker for it
@@ -63,7 +74,7 @@ function pointToLayer(feature, latlng, attributes){
 
     //determines which attribute to visualize with proportional symbols upon loading map
     var attribute = attributes[0];
-
+    //TRANSFER TO CSS
     //create marker options
     var options = {
        fillColor: "#00ccff",
@@ -113,19 +124,30 @@ function createPropSymbols(data, map, attributes, tours){
 function updatePropSymbols(map, attribute){
     //iterates through each layer (i.e., point) on map
     map.eachLayer(function(layer){
-        //conditional to make sure we're processing a layer with an attribute and ignore basemap
-        if (layer.feature && layer.feature.properties[attribute]){
-            //access feature properties
-            var props = layer.feature.properties;
+        // //conditional to make sure we're processing a layer with an attribute and ignore basemap
+        if (layer.feature){
+            //checks if the attribute of the property we are checking is equal to zero
+            //need to check this because attribute value of 0 are not considered as existing (using the && operator)
+            //by explicitly checking that attribute value is 0, we ensure that feature is passed to createPopup to update popup accordingly
+            if (layer.feature.properties[attribute] == 0){
+                //access feature properties
+                var props = layer.feature.properties;
+                //update each feature's radius based on new attribute values
+                var radius = calcPropRadius(props[attribute]);
+                layer.setRadius(radius);
 
-            //update each feature's radius based on new attribute values
-            var radius = calcPropRadius(props[attribute]);
-            layer.setRadius(radius);
+                //call function and send necessary data to create popup for circleMarkers
+                createPopup(props, attribute, layer, radius);
+            } else {
+                //access feature properties
+                var props = layer.feature.properties;
+                //update each feature's radius based on new attribute values
+                var radius = calcPropRadius(props[attribute]);
+                layer.setRadius(radius);
 
-            //call function and sent necessary data to create popup for circleMarkers
-            createPopup(props, attribute, layer, radius);
-
-            updateLegend(map, attribute);
+                //call function and send necessary data to create popup for circleMarkers
+                createPopup(props, attribute, layer, radius);
+            }
         };
     })
 };
@@ -133,17 +155,7 @@ function updatePropSymbols(map, attribute){
 //function to create sequence controls
 //need to add something that when you adjust slider, it changes dropdown back to Select a tour
 function createSequenceControls(map, attributes){
-
-    //trying to add dynamic title telling user what years' data they are on
-    // var year1 = attributes[0].split("_")[0];
-    // var year2 = attributes[0].split("_")[1];
-    // index = attributes[0];
-    // var titleLabel = '<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>';
-    //
-    //
-    // $("#title").html(titleLabel);
-
-    // updatePanelLabel(map, index);
+    //create sequence control to add to leaflet map in bottom left corner
     var SequenceControl = L.Control.extend({
         options: {
             position: 'bottomleft'
@@ -160,7 +172,7 @@ function createSequenceControls(map, attributes){
             $(container).append('<button class="skip" id="reverse" title="Reverse"><img src="img/backward.png"></button>');
             $(container).append('<button class="skip" id="forward" title="Skip"><img src="img/forward.png"></button>');
 
-            //kill any mouse event listeners on the map
+            //kill any mouse event listeners on the map when clicking on container
             $(container).on('mousedown dblclick', function(e){
                 L.DomEvent.stopPropagation(e);
             });
@@ -169,6 +181,7 @@ function createSequenceControls(map, attributes){
         }
     });
 
+    //adds the control to 'map'
     map.addControl(new SequenceControl());
 
     //set slider attributes
@@ -229,6 +242,7 @@ function createSequenceControls(map, attributes){
 //     // $("#panel").append('<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>');
 // }
 
+//function to put AJAX query data into array and return to callback function
 function processData(data){
     //empty array to hold attributes
     var attributes = [];
@@ -278,6 +292,7 @@ function createFilter(map, tours){
     };legend.addTo(map);
 };
 
+//function to put AJAX query data into array and return to callback function
 function processTours(data){
     //empty array to hold attributes
     var tours = [];
@@ -297,6 +312,7 @@ function processTours(data){
     return tours;
 }
 
+//updates map appropriately when choosing tour from dropdown menu control
 function filterIndex(map, tours){
     //click listener for filter list
     $('#list').change(function(){
@@ -304,97 +320,78 @@ function filterIndex(map, tours){
       //update prop symbols based on new filter choice
       updateFilter(map, tours[index]);
     });
-      // console.log(index);
-      // $( "select" ).change( displayVals );
-      // displayVals(index);
-        // var a = $('select.list option:selected').val();
-        // console.log(a);
-        // retrieve index value before click
-        // var index = $('.range-slider').val();
-        // console.log(index);
-        // console.log($(this).attr('id'));
-
-        // if ($(this).attr('id') == 'forward'){
-        //     index++;
-    //
-    //         //if this will make it go over the last attribute, return to first attribute
-    //         index = index > 4 ? 0 : index;
-    //     } else if ($(this).attr('id') == 'reverse'){
-    //         index--;
-    //         //if this will make it go below first attribute, return to last attribute
-    //         index = index < 0 ? 4 : index;
-    //     };
-    //     //updates the slider based on clicking buttons
-    //     $('.range-slider').val(index);
-    //
-    //     //pass new index to function so it can update prop symbols accordingly
-    //     updatePropSymbols(map, attributes[index]);
-    // });
-    // //input listener for slider
-    // $('.range-slider').on('input', function(){
-    //     //retrieve new index value
-    //     var index = $(this).val();
-    //
-    //     //pass new index to function so it can update prop symbols accordingly
-    //     updatePropSymbols(map, attributes[index]);
-    // });
-}
+};
 
 
-//NEED TO UPDATE FILTER POPUP CONTENT
+//function to update prop symbol size and popup based on filter selection
 function updateFilter(map, attribute){
+    //function to cycle through each layer in map
     map.eachLayer(function(layer){
-        if (layer.feature && layer.feature.properties[attribute]){
-            //access feature properties
-            var props = layer.feature.properties;
+        //checks that the layer is a feature because only features have attributes we're interested in
+        if (layer.feature){
+            //checks if the attribute of the property we are checking is equal to zero
+            //need to check this because attribute value of 0 are not considered as existing (using the && operator)
+            //by explicitly checking that attribute value is 0, we ensure that feature is passed to createPopup to update popup accordingly
+            if (layer.feature.properties[attribute] == 0){
+                //access feature properties
+                var props = layer.feature.properties;
+                //update each feature's radius based on new attribute values
+                var radius = calcPropRadius(props[attribute]);
+                layer.setRadius(radius);
 
-            //update each feature's radius based on new attribute values
-            var radius = calcPropRadius(props[attribute]);
-            layer.setRadius(radius);
+                //call function and send necessary data to create popup for circleMarkers
+                createPopup(props, attribute, layer, radius);
+            } else {
+                //access feature properties
+                var props = layer.feature.properties;
+                //update each feature's radius based on new attribute values
+                var radius = calcPropRadius(props[attribute]);
+                layer.setRadius(radius);
 
-            //call function and send necessary data to create popup for circleMarkers
-            createPopup(props, attribute, layer, radius);
+                //call function and send necessary data to create popup for circleMarkers
+                createPopup(props, attribute, layer, radius);
+              }
         };
     });
 };
 
-function createLegend(map,attributes){
-    var LegendControl = L.Control.extend({
-        options: {
-            position: 'bottomright'
-    },
+// function createLegend(map,attributes){
+//     var LegendControl = L.Control.extend({
+//         options: {
+//             position: 'bottomright'
+//     },
+//
+//         onAdd: function(map){
+//             // create the control container with a particular class name
+//             var container = L.DomUtil.create('div', 'legend-control-container');
+//
+//             // add div to container for temporal legend
+//             $(container).append('<div id="temporal-legend">');
+//
+//             return container;
+//         }
+//     });
 
-        onAdd: function(map){
-            // create the control container with a particular class name
-            var container = L.DomUtil.create('div', 'legend-control-container');
+//     map.addControl(new LegendControl());
+//     updateLegend(map, attributes[0]);
+//
+//     // updateLegend(map,attributes[0]);
+// };
 
-            // add div to container for temporal legend
-            $(container).append('<div id="temporal-legend">');
-
-            return container;
-        }
-    });
-
-    map.addControl(new LegendControl());
-    updateLegend(map, attributes[0]);
-
-    // updateLegend(map,attributes[0]);
-};
-
-function updateLegend(map, attribute) {
-    //add formatted attribute to popup content string
-    var year1 = attribute.split("_")[0];
-    var year2 = attribute.split("_")[1];
-    var legendContent = year1 + " through " + year2;
-    console.log(legendContent)
-    $('#temporal-legend').html(legendContent);
-
-
-}
+// function updateLegend(map, attribute) {
+//     //add formatted attribute to popup content string
+//     var year1 = attribute.split("_")[0];
+//     var year2 = attribute.split("_")[1];
+//     var legendContent = year1 + " through " + year2;
+//     console.log(legendContent)
+//     $('#temporal-legend').html(legendContent);
+//
+//
+// };
 
 //function to retrieve data and place on map
 function getData(map){
-    //jQuery AJAX method to retieve data
+    //jQuery AJAX method to retrieve data
     $.ajax("data/springsteenByState.geojson", {
         dataType: "json",
         success: function(response){
@@ -411,7 +408,7 @@ function getData(map){
 
             filterIndex(map, tours);
 
-            createLegend(map, attributes);
+            // createLegend(map, attributes);
         }
     });
 };
