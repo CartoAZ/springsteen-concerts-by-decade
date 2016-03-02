@@ -4,7 +4,7 @@ function createMap(){
     var southWest = L.latLng(21, -140);
     var northEast = L.latLng(65, -44);
     var bounds = L.latLngBounds(southWest, northEast);
-    console.log(bounds);
+
     //creates our map with default center/zoom
     var map = L.map('map', {
         center: [42, -96],
@@ -138,6 +138,7 @@ function updatePropSymbols(map, attribute){
 
                 //call function and send necessary data to create popup for circleMarkers
                 createPopup(props, attribute, layer, radius);
+
             } else {
                 //access feature properties
                 var props = layer.feature.properties;
@@ -216,7 +217,7 @@ function createSequenceControls(map, attributes){
 
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
-
+        updateLegend(map, attributes[index]);
         // //trying to pass new index to function to update label
         // updateTitle(map, attributes[index]);
     });
@@ -228,6 +229,7 @@ function createSequenceControls(map, attributes){
 
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
+        updateLegend(map, attributes[index]);
     });
 };
 
@@ -261,6 +263,7 @@ function processData(data){
     return attributes;
 };
 
+//5th interaction operator
 //function to create dropdown filter menu
 function createFilter(map, tours){
     //variable to hold dropdown
@@ -312,6 +315,7 @@ function processTours(data){
     return tours;
 }
 
+//5th interaction operator
 //updates map appropriately when choosing tour from dropdown menu control
 function filterIndex(map, tours){
     //click listener for filter list
@@ -319,10 +323,11 @@ function filterIndex(map, tours){
       var index = $('#list').val();
       //update prop symbols based on new filter choice
       updateFilter(map, tours[index]);
+      updateLegend(map, tours[index]);
     });
 };
 
-
+//5th interaction operator
 //function to update prop symbol size and popup based on filter selection
 function updateFilter(map, attribute){
     //function to cycle through each layer in map
@@ -355,39 +360,113 @@ function updateFilter(map, attribute){
     });
 };
 
-// function createLegend(map,attributes){
-//     var LegendControl = L.Control.extend({
-//         options: {
-//             position: 'bottomright'
-//     },
-//
-//         onAdd: function(map){
-//             // create the control container with a particular class name
-//             var container = L.DomUtil.create('div', 'legend-control-container');
-//
-//             // add div to container for temporal legend
-//             $(container).append('<div id="temporal-legend">');
-//
-//             return container;
-//         }
-//     });
+function createLegend(map,attributes){
+    var LegendControl = L.Control.extend({
+        options: {
+            position: 'bottomright'
+    },
 
-//     map.addControl(new LegendControl());
-//     updateLegend(map, attributes[0]);
-//
-//     // updateLegend(map,attributes[0]);
-// };
+        onAdd: function(map){
+            // create the control container with a particular class name
+            var container = L.DomUtil.create('div', 'legend-control-container');
 
-// function updateLegend(map, attribute) {
-//     //add formatted attribute to popup content string
-//     var year1 = attribute.split("_")[0];
-//     var year2 = attribute.split("_")[1];
-//     var legendContent = year1 + " through " + year2;
-//     console.log(legendContent)
-//     $('#temporal-legend').html(legendContent);
-//
-//
-// };
+            // add div to container for temporal legend
+            $(container).append('<div id="temporal-legend">');
+
+            //variable with HTML code to add to legend container
+            var svg = '<svg id="attribute-legend" width="150px" height="100px">';
+
+            //object for circles to hold valeus and y coord.
+            var circles = {
+                max: 33,
+                mean: 66,
+                min: 95
+            };
+
+            for (var circle in circles){
+                //circle string
+                svg += '<circle class="legend-circle" id="' + circle +
+                '" fill="#00ccff" fill-opacity="0.8" stroke="#336699" cx="40"/>';
+
+                //text string for circles
+                svg += '<text id="' + circle + '-text" x="92" y="' + circles[circle] +'"></text>';
+            };
+            //closes svg HTML string
+            svg += "</svg>";
+
+            //add svg to attribute legendContent
+            $(container).append(svg);
+
+            return container;
+        }
+    });
+
+    map.addControl(new LegendControl());
+
+    updateLegend(map, attributes[0]);
+};
+
+function updateLegend(map, attribute) {
+    //add formatted attribute to popup content string
+    var year1 = attribute.split("_")[0];
+    var year2 = attribute.split("_")[1];
+    var legendContent = year1 + " through " + year2;
+
+    //replaces legend content
+    $('#temporal-legend').html(legendContent);
+
+    //get max, mean, min values and return as object stored in circleValues
+    var circleValues = getCircleValues(map, attribute);
+
+    for (var key in circleValues){
+        //get radius for legend based on min, max, mean attribute values in circleValues object
+        var radius = calcPropRadius(circleValues[key]);
+
+        $('#'+key).attr({
+            cy: 99 - radius,
+            r: radius
+        });
+
+        //step 4: add legend text
+        $('#'+key+'-text').text(circleValues[key] + " shows");
+    };
+};
+
+//function to calculate mzx, mean, min values for an attribute-legend
+function getCircleValues(map, attribute){
+    //start with min at highest possible and max at lowest possible values
+    var min = Infinity,
+        max = -Infinity;
+
+    map.eachLayer(function(layer){
+        //get attribute value
+        //include second part of conditional so that attribute values of 0 are not included
+        //because if a 0 is passed as min, the circle will have radius 0 and not show up
+        if (layer.feature && layer.feature.properties[attribute]){
+            var attributeValue = Number(layer.feature.properties[attribute]);
+
+            //test for min
+            if (attributeValue < min){
+                min = attributeValue;
+            };
+
+            //test for max
+            if (attributeValue > max){
+                max = attributeValue;
+            };
+        };
+    });
+
+    //set mean; round to avoid decimals
+    var mean = Math.round((max + min) / 2);
+
+    //return values as an object
+    return {
+        max: max,
+        mean: mean,
+        min: min
+    };
+};
 
 //function to retrieve data and place on map
 function getData(map){
@@ -408,10 +487,9 @@ function getData(map){
 
             filterIndex(map, tours);
 
-            // createLegend(map, attributes);
+            createLegend(map, attributes);
         }
     });
 };
-
 
 $(document).ready(createMap);
