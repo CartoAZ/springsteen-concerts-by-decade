@@ -217,6 +217,7 @@ function createSequenceControls(map, attributes){
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
         updateLegend(map, attributes[index]);
+        updatePanel(map, attributes, index);
     });
 
     //input listener for slider
@@ -227,6 +228,7 @@ function createSequenceControls(map, attributes){
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
         updateLegend(map, attributes[index]);
+        updatePanel(map, attributes, index);
     });
 };
 
@@ -251,6 +253,125 @@ function processData(data){
     };
     //passes attributes back to anonymous callback function to add to variable
     return attributes;
+};
+
+function createPanelFilter(map, attributes){
+    //create variable to hold unnumbered list of tours
+    var panelContent = '<ul id="tours">'
+    //for loop adding the first tours to variable
+    for (i = 5; i <10 ; i++){
+        panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+    };
+    //close HTML unnumbered list
+    panelContent += "</li>"
+    //add html content to panel
+    $("#panel").html(panelContent);
+
+    //call function for panel event listeners
+    panelEvents(map, attributes);
+};
+
+function panelEvents(map, attributes){
+    //affordance to highlight tour when moused over
+    $('ul li.tour').mouseover(function(){
+        $(this).css('background', 'red');
+    });
+    $('li').mouseout(function(){
+        $(this).css('background', 'transparent');
+    });
+
+    //click listener for buttons
+    $('ul li').click(function(){
+
+        //allows for styling of selected tour by adding/removing class
+        $('ul li').removeClass("active");
+        $(this).addClass("active");
+
+        //retrieve index value from list
+        var index = $(this).val();
+    //update prop symbols based on new filter choice
+    updatePropSymbols(map, attributes[index]);
+    updateLegend(map, attributes[index]);
+    });
+};
+
+//function to update panel based on decade selected with sequencer
+function updatePanel(map, attributes, index){
+    //conditional to check for tours in the 1970s
+    if (index == 0){
+        //create variable to hold unnumbered list of tours
+        var panelContent = '<ul id="tours">'
+        //for loop adding the first tours to variable
+        for (i = 5; i <10 ; i++){
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+        };
+        //close HTML unnumbered list
+        panelContent += "</li>"
+        //add html content to panel
+        $("#panel").html(panelContent);
+        panelEvents(map, attributes);
+
+    } else if (index == 1) {
+        //create variable to hold unnumbered list of tours
+        var panelContent = '<ul id="tours">'
+        //for loop adding the first tours to variable
+        for (i = 10; i <13 ; i++){
+          panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+      };
+      //close HTML unnumbered list
+      panelContent += "</li>"
+      //add html content to panel
+      $("#panel").html(panelContent);
+
+      //call function for panel event listeners
+      panelEvents(map, attributes);
+
+    } else if (index == 2) {
+        //create variable to hold unnumbered list of tours
+        var panelContent = '<ul id="tours">'
+        //for loop adding the first tours to variable
+        for (i = 13; i <16 ; i++){
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+        };
+        //close HTML unnumbered list
+        panelContent += "</li>"
+        //add html content to panel
+        $("#panel").html(panelContent);
+
+        //call function for panel event listeners
+        panelEvents(map, attributes);
+
+    } else if (index == 3) {
+        //create variable to hold unnumbered list of tours
+        var panelContent = '<ul id="tours">'
+        //for loop adding the first tours to variable
+        for (i = 16; i <21 ; i++){
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+        };
+        //close HTML unnumbered list
+        panelContent += "</li>"
+        //add html content to panel
+        $("#panel").html(panelContent);
+
+        //call function for panel event listeners
+        panelEvents(map, attributes);
+
+    } else if (index == 4) {
+        //create variable to hold unnumbered list of tours
+        var panelContent = '<ul id="tours">'
+        //for loop adding the first tours to variable
+        for (i = 21; i <24 ; i++){
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+        };
+        //close HTML unnumbered list
+        panelContent += "</li>"
+        //add html content to panel
+        $("#panel").html(panelContent);
+
+        //call function for panel event listeners
+        panelEvents(map, attributes);
+
+    };
 };
 
 //5th interaction operator
@@ -346,14 +467,19 @@ function createLegend(map, attributes){
 };
 
 function updateLegend(map, attribute) {
-    //add formatted attribute to popup content string
-    var year1 = attribute.split("_")[0];
-    var year2 = attribute.split("_")[1];
-    var legendContent = year1 + " through " + year2;
+    //if attribute is decade, make this temporal legend
+    if (attribute.indexOf("_") > -1){
+        //add formatted attribute to popup content string
+        var year1 = attribute.split("_")[0];
+        var year2 = attribute.split("_")[1];
+        var legendContent = year1 + " through " + year2;
 
+    //if attribute is a tour, make this temporal legend
+    } else {
+        var legendContent = attribute;
+    }
     //replaces legend content
     $('#temporal-legend').html(legendContent);
-
     //get max, mean, min values and return as object stored in circleValues
     var circleValues = getCircleValues(map, attribute);
 
@@ -407,6 +533,8 @@ function getCircleValues(map, attribute){
     };
 };
 
+
+
 //function to retrieve data and place on map
 function getData(map){
     //jQuery AJAX method to retrieve data
@@ -425,6 +553,10 @@ function getData(map){
             filterIndex(map, attributes);
 
             createLegend(map, attributes);
+
+            createPanelFilter(map, attributes);
+
+            // updatePanel(map, attributes);
         }
     });
 };

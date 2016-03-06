@@ -26,6 +26,15 @@
     line-height: 42px;
 }
 
+#tours {
+    list-style-type: none;
+}
+
+#tours .active{
+    background: #b84dff;
+    color: yellow;
+}
+
 .sequence-control-container {
     width: 350px;
     height: 30px;
