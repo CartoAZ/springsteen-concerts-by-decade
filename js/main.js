@@ -92,30 +92,29 @@ function pointToLayer(feature, latlng, attributes){
 
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
-
-    //call function and sent necessary data to create popup for circleMarkers
-    createPopup(feature.properties, attribute, layer, options.radius);
-
-    //event listeners to open popup on hover
-    layer.on({
-        mouseover: function(){
-            this.openPopup();
-        },
-        mouseout: function(){
-            this.closePopup();
-        }
-    });
+    if (attribute != 0){
+        //call function and sent necessary data to create popup for circleMarkers
+        createPopup(feature.properties, attribute, layer, options.radius);
+        //event listeners to open popup on hover
+        layer.on({
+            mouseover: function(){
+                this.openPopup();
+            },
+            mouseout: function(){
+                this.closePopup();
+            }
+        });
+    };
     //return circle marker to the L.geoJson pointToLayer options
     return layer;
 };
 
 //create circle markers for point features to map
-function createPropSymbols(data, map, attributes, tours){
-
+function createPropSymbols(data, map, attributes){
     //create a Leaflet GeoJSON layer and places it on map
     L.geoJson(data, {
       pointToLayer: function(feature, latlng){
-          return pointToLayer(feature, latlng, attributes, tours);
+          return pointToLayer(feature, latlng, attributes);
       }
     }).addTo(map);
 };
@@ -218,8 +217,6 @@ function createSequenceControls(map, attributes){
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
         updateLegend(map, attributes[index]);
-        // //trying to pass new index to function to update label
-        // updateTitle(map, attributes[index]);
     });
 
     //input listener for slider
@@ -233,17 +230,6 @@ function createSequenceControls(map, attributes){
     });
 };
 
-// //function to udpate HTML string on panel telling user what years' data are being displayed
-// function updateTitle(map, attribute, titleContent){
-//
-//
-//     //split attribute title into 'from' and 'to' years
-//     var year1 = attribute.split("_")[0];
-//     var year2 = attribute.split("_")[1];
-//     $("#title").html('<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>');
-//     // $("#panel").append('<p>Bruce Springsteen concerts from ' + year1 + ' to ' + year2 + ' </p>');
-// }
-
 //function to put AJAX query data into array and return to callback function
 function processData(data){
     //empty array to hold attributes
@@ -255,8 +241,12 @@ function processData(data){
     //push each attribute name into attributes array
     for (var attribute in properties) {
         //only take attributes with population values
-        if (attribute.indexOf("_") > -1){
-            attributes.push(attribute);
+        if (attribute.indexOf("_") || attribute.indexOf(" ") > -1){
+            //remove 'State' and 'FullState' properties from array
+            if (attribute.indexOf("State") == -1){
+                //add attribute to attributes array
+                attributes.push(attribute);
+            };
         };
     };
     //passes attributes back to anonymous callback function to add to variable
@@ -265,12 +255,12 @@ function processData(data){
 
 //5th interaction operator
 //function to create dropdown filter menu
-function createFilter(map, tours){
+function createFilter(map, attributes){
     //variable to hold dropdown
-    var legend = L.control({position: 'topright'});
+    var filter = L.control({position: 'topright'});
 
-    //not sure what this does??
-    legend.onAdd = function (map) {
+    //when filter menu is added, do this function
+    filter.onAdd = function (map) {
 
         //creates a div element to add to map
         var div = L.DomUtil.create('div', 'info legend');
@@ -279,9 +269,9 @@ function createFilter(map, tours){
         var dropdown = '<select id="list"><option value=20>Select a Tour</option>'
 
         //for loop to add each tour from 'tours' array to dropdown menu
-        for (i = 19; i > -1; i--){
+        for (i = 24; i > 4; i--){
 
-          dropdown += '<option class="tour" value="' + i + '">' + tours[i] + '</option>'
+          dropdown += '<option class="tour" value="' + i + '">' + attributes[i] + '</option>'
         };
         dropdown += '</select>';
 
@@ -292,75 +282,24 @@ function createFilter(map, tours){
         div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
 
         return div;
-    };legend.addTo(map);
+    };filter.addTo(map);
 };
 
-//function to put AJAX query data into array and return to callback function
-function processTours(data){
-    //empty array to hold attributes
-    var tours = [];
 
-    //properties of the first feature in the dataset
-    var properties = data.features[0].properties;
-
-    //push each attribute name into attributes array
-    for (var attribute in properties) {
-        //only take attributes with population values
-        if (attribute.indexOf(" ") > -1){
-            tours.push(attribute);
-        };
-    };
-
-    //passes attributes back to anonymous callback function to add to variable
-    return tours;
-}
 
 //5th interaction operator
 //updates map appropriately when choosing tour from dropdown menu control
-function filterIndex(map, tours){
+function filterIndex(map, attributes){
     //click listener for filter list
     $('#list').change(function(){
       var index = $('#list').val();
       //update prop symbols based on new filter choice
-      updateFilter(map, tours[index]);
-      updateLegend(map, tours[index]);
+      updatePropSymbols(map, attributes[index]);
+      updateLegend(map, attributes[index]);
     });
 };
 
-//5th interaction operator
-//function to update prop symbol size and popup based on filter selection
-function updateFilter(map, attribute){
-    //function to cycle through each layer in map
-    map.eachLayer(function(layer){
-        //checks that the layer is a feature because only features have attributes we're interested in
-        if (layer.feature){
-            //checks if the attribute of the property we are checking is equal to zero
-            //need to check this because attribute value of 0 are not considered as existing (using the && operator)
-            //by explicitly checking that attribute value is 0, we ensure that feature is passed to createPopup to update popup accordingly
-            if (layer.feature.properties[attribute] == 0){
-                //access feature properties
-                var props = layer.feature.properties;
-                //update each feature's radius based on new attribute values
-                var radius = calcPropRadius(props[attribute]);
-                layer.setRadius(radius);
-
-                //call function and send necessary data to create popup for circleMarkers
-                createPopup(props, attribute, layer, radius);
-            } else {
-                //access feature properties
-                var props = layer.feature.properties;
-                //update each feature's radius based on new attribute values
-                var radius = calcPropRadius(props[attribute]);
-                layer.setRadius(radius);
-
-                //call function and send necessary data to create popup for circleMarkers
-                createPopup(props, attribute, layer, radius);
-              }
-        };
-    });
-};
-
-function createLegend(map,attributes){
+function createLegend(map, attributes){
     var LegendControl = L.Control.extend({
         options: {
             position: 'bottomright'
@@ -476,16 +415,14 @@ function getData(map){
         success: function(response){
             //create/returns attributes array
             var attributes = processData(response);
-            //create/return tours array
-            var tours = processTours(response);
 
-            createFilter(map, tours);
+            createFilter(map, attributes);
             //call function to create proportional symbols
-            createPropSymbols(response, map, attributes, tours);
+            createPropSymbols(response, map, attributes);
             //call function to create sequence controls
             createSequenceControls(map, attributes);
 
-            filterIndex(map, tours);
+            filterIndex(map, attributes);
 
             createLegend(map, attributes);
         }

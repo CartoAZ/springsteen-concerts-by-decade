@@ -511,45 +511,6 @@
     {
       "type": "Feature",
       "properties": {
-        "State": "ID",
-        "1970_1979": 0,
-        "1980_1989": 0,
-        "1990_2000": 0,
-        "2001_2009": 0,
-        "2010_2016": 0,
-        "Greetings from Asbury Park": 0,
-        "Born to Run Leg 1": 0,
-        "Chicken Scratch": 0,
-        "Born to Run Leg 2": 0,
-        "Darkness on the Edge of Town": 0,
-        "The River": 0,
-        "Born in the USA": 0,
-        "Tunnel of Love": 0,
-        "Human Touch": 0,
-        "The Ghost of Tom Joad": 0,
-        "Reunion ": 0,
-        "The Rising": 0,
-        "Devils and Dust": 0,
-        "Seeger Sessions": 0,
-        "Magic ": 0,
-        "Working on a Dream": 0,
-        "Wrecking Ball": 0,
-        "High Hopes": 0,
-        "The River 2016": 0,
-        "All Tours": 0,
-        "FullState": "Idaho"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -114.66,
-          4444.39
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "State": "IL",
         "1970_1979": 11,
         "1980_1989": 14,
@@ -1012,45 +973,6 @@
         "coordinates": [
           -89.66,
           32.76
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "State": "MT",
-        "1970_1979": 0,
-        "1980_1989": 0,
-        "1990_2000": 0,
-        "2001_2009": 0,
-        "2010_2016": 0,
-        "Greetings from Asbury Park": 0,
-        "Born to Run Leg 1": 0,
-        "Chicken Scratch": 0,
-        "Born to Run Leg 2": 0,
-        "Darkness on the Edge of Town": 0,
-        "The River": 0,
-        "Born in the USA": 0,
-        "Tunnel of Love": 0,
-        "Human Touch": 0,
-        "The Ghost of Tom Joad": 0,
-        "Reunion ": 0,
-        "The Rising": 0,
-        "Devils and Dust": 0,
-        "Seeger Sessions": 0,
-        "Magic ": 0,
-        "Working on a Dream": 0,
-        "Wrecking Ball": 0,
-        "High Hopes": 0,
-        "The River 2016": 0,
-        "All Tours": 0,
-        "FullState": "Montana"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -109.65,
-          47.03
         ]
       }
     },
@@ -1720,45 +1642,6 @@
     {
       "type": "Feature",
       "properties": {
-        "State": "SD",
-        "1970_1979": 0,
-        "1980_1989": 0,
-        "1990_2000": 0,
-        "2001_2009": 0,
-        "2010_2016": 0,
-        "Greetings from Asbury Park": 0,
-        "Born to Run Leg 1": 0,
-        "Chicken Scratch": 0,
-        "Born to Run Leg 2": 0,
-        "Darkness on the Edge of Town": 0,
-        "The River": 0,
-        "Born in the USA": 0,
-        "Tunnel of Love": 0,
-        "Human Touch": 0,
-        "The Ghost of Tom Joad": 0,
-        "Reunion ": 0,
-        "The Rising": 0,
-        "Devils and Dust": 0,
-        "Seeger Sessions": 0,
-        "Magic ": 0,
-        "Working on a Dream": 0,
-        "Wrecking Ball": 0,
-        "High Hopes": 0,
-        "The River 2016": 0,
-        "All Tours": 0,
-        "FullState": "South Dakota"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -100.24,
-          44.43
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "State": "TN",
         "1970_1979": 6,
         "1980_1989": 5,
@@ -2065,45 +1948,6 @@
         "coordinates": [
           -80.61,
           38.64
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "State": "WY",
-        "1970_1979": 0,
-        "1980_1989": 0,
-        "1990_2000": 0,
-        "2001_2009": 0,
-        "2010_2016": 0,
-        "Greetings from Asbury Park": 0,
-        "Born to Run Leg 1": 0,
-        "Chicken Scratch": 0,
-        "Born to Run Leg 2": 0,
-        "Darkness on the Edge of Town": 0,
-        "The River": 0,
-        "Born in the USA": 0,
-        "Tunnel of Love": 0,
-        "Human Touch": 0,
-        "The Ghost of Tom Joad": 0,
-        "Reunion ": 0,
-        "The Rising": 0,
-        "Devils and Dust": 0,
-        "Seeger Sessions": 0,
-        "Magic ": 0,
-        "Working on a Dream": 0,
-        "Wrecking Ball": 0,
-        "High Hopes": 0,
-        "The River 2016": 0,
-        "All Tours": 0,
-        "FullState": "Wyoming"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -107.55,
-          43
         ]
       }
     }

@@ -17,14 +17,14 @@
     line-height: 45px;
 }
 
-/*#panel {
+#panel {
     width: 16%;
     padding: 20px;
     display: inline-block;
     vertical-align: top;
     text-align: center;
     line-height: 42px;
-}*/
+}
 
 .sequence-control-container {
     width: 350px;
