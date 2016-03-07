@@ -1,8 +1,8 @@
 //function to instantiate the Leaflet map
 function createMap(){
 
-    var southWest = L.latLng(21, -140);
-    var northEast = L.latLng(65, -44);
+    var southWest = L.latLng(24, -140);
+    var northEast = L.latLng(65, -54);
     var bounds = L.latLngBounds(southWest, northEast);
 
     //creates our map with default center/zoom
@@ -28,7 +28,7 @@ L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', 
 //calculate the radius of each proportional symbols
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
-    var scalFactor = 30;
+    var scalFactor = 50;
     //area based on attribute value and scale factor
     var area = attValue * scalFactor;
     //radius calculated based on area
@@ -218,6 +218,9 @@ function createSequenceControls(map, attributes){
         updatePropSymbols(map, attributes[index]);
         updateLegend(map, attributes[index]);
         updatePanel(map, attributes, index);
+        //clears album image from panel when sequencer is used
+        $('#album').html('');
+
     });
 
     //input listener for slider
@@ -229,6 +232,9 @@ function createSequenceControls(map, attributes){
         updatePropSymbols(map, attributes[index]);
         updateLegend(map, attributes[index]);
         updatePanel(map, attributes, index);
+        //clears album image from panel when sequencer is used
+        $('#album').html('');
+
     });
 };
 
@@ -256,17 +262,18 @@ function processData(data){
 };
 
 function createPanelFilter(map, attributes){
+    //array of years to add to panel
+    var concertYears = ['(1972-73)', '(1974-75)', '(1976)', '(1976-77)', '(1978-79)','(1980-81)', '(1984-85)', '(1988-89)', '(1992-93)', '(1995-96)', '(1999-2000)', '(2002-03)', '(2005)', '(2006)', '(2007-08)', '(2009)', '(2012)', '(2014)', '(2016)'];
     //create variable to hold unnumbered list of tours
     var panelContent = '<ul id="tours">'
     //for loop adding the first tours to variable
     for (i = 5; i <10 ; i++){
-        panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+        panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i - 5] + '</li>';
     };
     //close HTML unnumbered list
     panelContent += "</li>"
     //add html content to panel
     $("#panel").html(panelContent);
-
     //call function for panel event listeners
     panelEvents(map, attributes);
 };
@@ -274,10 +281,12 @@ function createPanelFilter(map, attributes){
 function panelEvents(map, attributes){
     //affordance to highlight tour when moused over
     $('ul li.tour').mouseover(function(){
-        $(this).css({'text-decoration': 'underline', 'color': '#00ccff'});
+        $(this).addClass("hover");
+        // $(this).css({'text-decoration': 'underline', 'color': '#00ccff'});
     });
     $('li').mouseout(function(){
-        $(this).css({'text-decoration': 'none', 'color': 'black'});
+        $(this).removeClass("hover");
+        // $(this).css({'text-decoration': 'none', 'color': 'white'});
     });
 
     //click listener for buttons
@@ -289,6 +298,8 @@ function panelEvents(map, attributes){
 
         //retrieve index value from list
         var index = $(this).val();
+        $('#album').html('<img src ="/../img/' + index + '.jpg">');
+
     //update prop symbols based on new filter choice
     updatePropSymbols(map, attributes[index]);
     updateLegend(map, attributes[index]);
@@ -297,13 +308,15 @@ function panelEvents(map, attributes){
 
 //function to update panel based on decade selected with sequencer
 function updatePanel(map, attributes, index){
+    //array of years to add to panel
+    var concertYears = ['(1972-73)', '(1974-75)', '(1976)', '(1976-77)', '(1978-79)','(1980-81)', '(1984-85)', '(1988-89)', '(1992-93)', '(1995-96)', '(1999-2000)', '(2002-03)', '(2005)', '(2006)', '(2007-08)', '(2009)', '(2012)', '(2014)', '(2016)'];
     //conditional to check for tours in the 1970s
     if (index == 0){
         //create variable to hold unnumbered list of tours
         var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 5; i <10 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
         //close HTML unnumbered list
         panelContent += "</li>"
@@ -316,7 +329,7 @@ function updatePanel(map, attributes, index){
         var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 10; i <13 ; i++){
-          panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
       };
       //close HTML unnumbered list
       panelContent += "</li>"
@@ -331,7 +344,7 @@ function updatePanel(map, attributes, index){
         var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 13; i <16 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
         //close HTML unnumbered list
         panelContent += "</li>"
@@ -346,7 +359,7 @@ function updatePanel(map, attributes, index){
         var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 16; i <21 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
         //close HTML unnumbered list
         panelContent += "</li>"
@@ -361,7 +374,7 @@ function updatePanel(map, attributes, index){
         var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 21; i <24 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + '</li>';
+            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
         //close HTML unnumbered list
         panelContent += "</li>"
@@ -373,52 +386,6 @@ function updatePanel(map, attributes, index){
 
     };
 };
-
-// //5th interaction operator
-// //function to create dropdown filter menu
-// function createFilter(map, attributes){
-//     //variable to hold dropdown
-//     var filter = L.control({position: 'topright'});
-//
-//     //when filter menu is added, do this function
-//     filter.onAdd = function (map) {
-//
-//         //creates a div element to add to map
-//         var div = L.DomUtil.create('div', 'info legend');
-//
-//         //variable to hold HTML string; add numeric value to reference index in tours array
-//         var dropdown = '<select id="list"><option value=20>Select a Tour</option>'
-//
-//         //for loop to add each tour from 'tours' array to dropdown menu
-//         for (i = 24; i > 4; i--){
-//
-//           dropdown += '<option class="tour" value="' + i + '">' + attributes[i] + '</option>'
-//         };
-//         dropdown += '</select>';
-//
-//         //adds HTML string fromd dropdown to innerHTML of div
-//         div.innerHTML = dropdown
-//
-//         //what does this do??????
-//         div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
-//
-//         return div;
-//     };filter.addTo(map);
-// };
-
-
-
-// //5th interaction operator
-// //updates map appropriately when choosing tour from dropdown menu control
-// function filterIndex(map, attributes){
-//     //click listener for filter list
-//     $('#list').change(function(){
-//       var index = $('#list').val();
-//       //update prop symbols based on new filter choice
-//       updatePropSymbols(map, attributes[index]);
-//       updateLegend(map, attributes[index]);
-//     });
-// };
 
 //add in stopPropagation
 function createLegend(map, attributes){
@@ -435,11 +402,11 @@ function createLegend(map, attributes){
             $(container).append('<div id="temporal-legend">');
 
             //variable with HTML code to add to legend container
-            var svg = '<svg id="attribute-legend" width="150px" height="100px">';
+            var svg = '<svg id="attribute-legend" width="160px" height="100px">';
 
-            //object for circles to hold valeus and y coord.
+            //object for circles to hold values and y coord.
             var circles = {
-                max: 33,
+                max: 35,
                 mean: 66,
                 min: 95
             };
@@ -447,10 +414,10 @@ function createLegend(map, attributes){
             for (var circle in circles){
                 //circle string
                 svg += '<circle class="legend-circle" id="' + circle +
-                '" fill="#00ccff" fill-opacity="0.8" stroke="#336699" cx="40"/>';
+                '" fill="#00ccff" fill-opacity="0.8" stroke="#336699" cx="50"/>';
 
                 //text string for circles
-                svg += '<text id="' + circle + '-text" x="92" y="' + circles[circle] +'"></text>';
+                svg += '<text id="' + circle + '-text" x="95" y="' + circles[circle] +'"></text>';
             };
             //closes svg HTML string
             svg += "</svg>";
@@ -475,12 +442,15 @@ function updateLegend(map, attribute) {
         var year2 = attribute.split("_")[1];
         var legendContent = year1 + " through " + year2;
 
+        var decadeContent = 'Tours ' + year1 + ' - ' + year2;
+        $('#decade').html(decadeContent);
     //if attribute is a tour, make this temporal legend
     } else {
         var legendContent = attribute;
     }
     //replaces legend content
     $('#temporal-legend').html(legendContent);
+
     //get max, mean, min values and return as object stored in circleValues
     var circleValues = getCircleValues(map, attribute);
 
@@ -493,8 +463,14 @@ function updateLegend(map, attribute) {
             r: radius
         });
 
-        //step 4: add legend text
-        $('#'+key+'-text').text(circleValues[key] + " shows");
+        //conditional to make minimum say 1 show rather than 1 shows
+        if (key == 'min') {
+            //adds legend text
+            $('#'+key+'-text').text(circleValues[key] + " show");
+        } else {
+            //adds legend text
+            $('#'+key+'-text').text(circleValues[key] + " shows");
+        };
     };
 };
 
@@ -534,7 +510,6 @@ function getCircleValues(map, attribute){
     };
 };
 
-
 //function to retrieve data and place on map
 function getData(map){
     //jQuery AJAX method to retrieve data
@@ -550,13 +525,9 @@ function getData(map){
             //call function to create sequence controls
             createSequenceControls(map, attributes);
 
-            // filterIndex(map, attributes);
-
             createLegend(map, attributes);
 
             createPanelFilter(map, attributes);
-
-            // updatePanel(map, attributes);
         }
     });
 };
