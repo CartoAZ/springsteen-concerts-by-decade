@@ -274,10 +274,10 @@ function createPanelFilter(map, attributes){
 function panelEvents(map, attributes){
     //affordance to highlight tour when moused over
     $('ul li.tour').mouseover(function(){
-        $(this).css('background', 'red');
+        $(this).css({'text-decoration': 'underline', 'color': '#00ccff'});
     });
     $('li').mouseout(function(){
-        $(this).css('background', 'transparent');
+        $(this).css({'text-decoration': 'none', 'color': 'black'});
     });
 
     //click listener for buttons
@@ -374,52 +374,53 @@ function updatePanel(map, attributes, index){
     };
 };
 
-//5th interaction operator
-//function to create dropdown filter menu
-function createFilter(map, attributes){
-    //variable to hold dropdown
-    var filter = L.control({position: 'topright'});
+// //5th interaction operator
+// //function to create dropdown filter menu
+// function createFilter(map, attributes){
+//     //variable to hold dropdown
+//     var filter = L.control({position: 'topright'});
+//
+//     //when filter menu is added, do this function
+//     filter.onAdd = function (map) {
+//
+//         //creates a div element to add to map
+//         var div = L.DomUtil.create('div', 'info legend');
+//
+//         //variable to hold HTML string; add numeric value to reference index in tours array
+//         var dropdown = '<select id="list"><option value=20>Select a Tour</option>'
+//
+//         //for loop to add each tour from 'tours' array to dropdown menu
+//         for (i = 24; i > 4; i--){
+//
+//           dropdown += '<option class="tour" value="' + i + '">' + attributes[i] + '</option>'
+//         };
+//         dropdown += '</select>';
+//
+//         //adds HTML string fromd dropdown to innerHTML of div
+//         div.innerHTML = dropdown
+//
+//         //what does this do??????
+//         div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+//
+//         return div;
+//     };filter.addTo(map);
+// };
 
-    //when filter menu is added, do this function
-    filter.onAdd = function (map) {
-
-        //creates a div element to add to map
-        var div = L.DomUtil.create('div', 'info legend');
-
-        //variable to hold HTML string; add numeric value to reference index in tours array
-        var dropdown = '<select id="list"><option value=20>Select a Tour</option>'
-
-        //for loop to add each tour from 'tours' array to dropdown menu
-        for (i = 24; i > 4; i--){
-
-          dropdown += '<option class="tour" value="' + i + '">' + attributes[i] + '</option>'
-        };
-        dropdown += '</select>';
-
-        //adds HTML string fromd dropdown to innerHTML of div
-        div.innerHTML = dropdown
-
-        //what does this do??????
-        div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
-
-        return div;
-    };filter.addTo(map);
-};
 
 
+// //5th interaction operator
+// //updates map appropriately when choosing tour from dropdown menu control
+// function filterIndex(map, attributes){
+//     //click listener for filter list
+//     $('#list').change(function(){
+//       var index = $('#list').val();
+//       //update prop symbols based on new filter choice
+//       updatePropSymbols(map, attributes[index]);
+//       updateLegend(map, attributes[index]);
+//     });
+// };
 
-//5th interaction operator
-//updates map appropriately when choosing tour from dropdown menu control
-function filterIndex(map, attributes){
-    //click listener for filter list
-    $('#list').change(function(){
-      var index = $('#list').val();
-      //update prop symbols based on new filter choice
-      updatePropSymbols(map, attributes[index]);
-      updateLegend(map, attributes[index]);
-    });
-};
-
+//add in stopPropagation
 function createLegend(map, attributes){
     var LegendControl = L.Control.extend({
         options: {
@@ -534,7 +535,6 @@ function getCircleValues(map, attribute){
 };
 
 
-
 //function to retrieve data and place on map
 function getData(map){
     //jQuery AJAX method to retrieve data
@@ -544,13 +544,13 @@ function getData(map){
             //create/returns attributes array
             var attributes = processData(response);
 
-            createFilter(map, attributes);
+            // createFilter(map, attributes);
             //call function to create proportional symbols
             createPropSymbols(response, map, attributes);
             //call function to create sequence controls
             createSequenceControls(map, attributes);
 
-            filterIndex(map, attributes);
+            // filterIndex(map, attributes);
 
             createLegend(map, attributes);
 

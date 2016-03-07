@@ -18,12 +18,15 @@
 }
 
 #panel {
-    width: 16%;
-    padding: 20px;
+    width: 25%;
+    padding: 5px;
     display: inline-block;
-    vertical-align: top;
-    text-align: center;
-    line-height: 42px;
+    vertical-align: bottom;
+    text-align: left;
+    line-height: 20px;
+    font-size: 0.8em;
+    background-image: url('img/brucespringsteen1975.jpg');
+    background-size: cover;
 }
 
 #tours {
@@ -34,6 +37,7 @@
     background: #b84dff;
     color: yellow;
 }
+
 
 .sequence-control-container {
     width: 350px;
