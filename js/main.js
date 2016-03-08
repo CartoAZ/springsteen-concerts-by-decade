@@ -1,6 +1,7 @@
 //function to instantiate the Leaflet map
 function createMap(){
 
+    //variables to set bounds for panning
     var southWest = L.latLng(24, -140);
     var northEast = L.latLng(65, -54);
     var bounds = L.latLngBounds(southWest, northEast);
@@ -12,16 +13,16 @@ function createMap(){
         zoom: 3
     });
 
-//loads tilelayer onto map
-L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
-  	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  	subdomains: 'abcd',
-  	minZoom: 3,
-  	maxZoom: 7,
-  	ext: 'png'
-}).addTo(map);
+    //loads tilelayer onto map
+    L.tileLayer('http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}', {
+      	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      	subdomains: 'abcd',
+      	minZoom: 3,
+      	maxZoom: 7,
+      	ext: 'png'
+    }).addTo(map);
 
-
+    //function that retrieves data and calls other functions
     getData(map);
 };
 
@@ -220,6 +221,7 @@ function createSequenceControls(map, attributes){
         updatePanel(map, attributes, index);
         //clears album image from panel when sequencer is used
         $('#album').html('');
+        backgroundInfo();
 
     });
 
@@ -234,7 +236,7 @@ function createSequenceControls(map, attributes){
         updatePanel(map, attributes, index);
         //clears album image from panel when sequencer is used
         $('#album').html('');
-
+        backgroundInfo();
     });
 };
 
@@ -272,11 +274,18 @@ function createPanelFilter(map, attributes){
     };
     //close HTML unnumbered list
     panelContent += "</li>"
+
     //add html content to panel
     $("#panel").html(panelContent);
     //call function for panel event listeners
     panelEvents(map, attributes);
+    backgroundInfo();
 };
+
+function backgroundInfo(){
+    var content = '<p class="info">Bruce Springsteen, now 66 years old, has been touring with the E Street Band for over 40 years. He continues to play to sold out stadiums and arenas around the world, with sets lasting over three hours.</p><p class="info"id="quote">"Think of it this way: performing is like sprinting while screaming for three, four minutes. And then you do it again. And then you do it again. And then you walk a little, shouting the whole time."</p><p class="info"> -- Bruce Springsteen</p>'
+    $("#background").html(content);
+}
 
 function panelEvents(map, attributes){
     //affordance to highlight tour when moused over
@@ -303,6 +312,7 @@ function panelEvents(map, attributes){
     //update prop symbols based on new filter choice
     updatePropSymbols(map, attributes[index]);
     updateLegend(map, attributes[index]);
+    $('#background').html(" ")
     });
 };
 
