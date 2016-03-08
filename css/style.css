@@ -66,13 +66,13 @@
     width: 100%;
     height: 95%;
     text-align: left;
-    line-height: 20px;
     position: absolute;
     bottom: 0;
     right: 7%;
     z-index: 1;
     font-family: "American Typewriter";
     line-height: 1.8em;
+    font-weight: lighter;
 }
 
 #album {
@@ -110,14 +110,14 @@ li {
     color: #00ccff;
     font-weight: bold;
     width: auto;
-    text-decoration: underline;
     text-decoration-color: #00ccff;
     width: fit-content;
 }
 
 #tours .hover {
-    text-decoration: underline;
     color: #336699;
+    font-family: "American Typewriter";
+    font-weight: bold;
 }
 
 .sequence-control-container, .legend-control-container {
