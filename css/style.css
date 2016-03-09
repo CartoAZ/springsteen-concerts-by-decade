@@ -7,11 +7,11 @@
 }
 
 #title {
-    height: 8%;
-    width: 60%;
+    height: 10.5%;
+    width: 68%;
     background-color: black;
     color: #00ccff;
-    font-size: 1.8em;
+    font-size: 1.5em;
     text-align: center;
     opacity: 0.9;
     position: absolute;
@@ -19,6 +19,7 @@
     left: 5%;
     z-index: 2;
     border-radius: 5px;
+    font-family: "American Typewriter";
 }
 
 #map {
@@ -120,6 +121,10 @@ li {
     font-weight: bold;
 }
 
+#temporal-legend, #max-text, #mean-text, #min-text{
+    font-family: "American Typewriter";
+}
+
 .sequence-control-container, .legend-control-container {
     background-color: white;
     padding: 10px;
@@ -137,6 +142,8 @@ li {
     line-height: 45px;
     text-align: center;
     border: solid gray 1px;
+    position: absolute;
+    bottom: 10px;
 }
 
 .range-slider {
@@ -155,6 +162,15 @@ li {
     margin: 0.2em;
     color: black;
 }
+
+.leaflet-top.leaflet-right{
+    right: -1.5%;
+}
+
+.leaflet-top.leaflet-left{
+    left: -1%;
+}
+
 
 .info{
     color: gray;

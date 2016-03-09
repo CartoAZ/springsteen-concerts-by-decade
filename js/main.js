@@ -6,7 +6,7 @@ function createMap(){
     var northEast = L.latLng(65, -54);
     var bounds = L.latLngBounds(southWest, northEast);
 
-    //creates our map with default center/zoom
+    //creates map with default center/zoom
     var map = L.map('map', {
         center: [42, -96],
         maxBounds: bounds,
@@ -38,11 +38,13 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
+//creates popup and adds content
 function createPopup(properties, attribute, layer, radius){
     //checks if the state has a 0 for the specified attribute
-    if(properties[attribute] == 0){
+    if (properties[attribute] == 0){
         //removes popup for states that didn't have any concerts
         layer.unbindPopup();
+
     } else {
         //checks for underscore to format popups when viewing data by decade vs format popup for
         //individual tours that don't have a from/to date
@@ -55,11 +57,11 @@ function createPopup(properties, attribute, layer, radius){
             var year2 = attribute.split("_")[1];
             popupContent += "<p><b>Concerts between " + year1 + " and " + year2 + ":</b> " + properties[attribute] + "</p>";
         } else {
-          //define text to be in popup
-          var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
+            //define text to be in popup
+            var popupContent = "<p><b>State:</b> " + properties.FullState + "</p>";
 
-          //add formatted attribute to popup content string
-          popupContent += "<p><b>Concerts on " + attribute + " Tour in " + properties.State + ":</b> " + properties[attribute] + "</p>";
+            //add formatted attribute to popup content string
+            popupContent += "<p><b>Concerts on " + attribute + " Tour in " + properties.State + ":</b> " + properties[attribute] + "</p>";
         };
         //bind popup to circle marker and offset popup
         layer.bindPopup(popupContent, {
@@ -70,53 +72,54 @@ function createPopup(properties, attribute, layer, radius){
 };
 
 //function to iterate over each record in geojson and create a point marker for it
-//also creates/defines popup content for each point marker
 function pointToLayer(feature, latlng, attributes){
 
     //determines which attribute to visualize with proportional symbols upon loading map
     var attribute = attributes[0];
-    //TRANSFER TO CSS
-    //create marker options
-    var options = {
-       fillColor: "#00ccff",
-       color: "#336699",
-       weight: 1,
-       opacity: 1,
-       fillOpacity: 0.8
+    //avoid creating tiny circles with a weighted outline for attribute value of 0
+    if (feature.properties[attribute] != 0){
+        //create marker options
+        var options = {
+           fillColor: "#00ccff",
+           color: "#336699",
+           weight: 1,
+           opacity: 1,
+           fillOpacity: 0.8
+        };
+
+        //determine value of selected attribute for each feature
+        var attValue = Number(feature.properties[attribute]);
+
+        //give each feature's circle marker a radius based on its attribute
+        options.radius = calcPropRadius(attValue);
+
+        //create circle marker layer
+        var layer = L.circleMarker(latlng, options);
+        if (attribute != 0){
+            //call function and send necessary data to create popup for circleMarkers
+            createPopup(feature.properties, attribute, layer, options.radius);
+            //event listeners to open popup on hover
+            layer.on({
+                mouseover: function(){
+                    this.openPopup();
+                },
+                mouseout: function(){
+                    this.closePopup();
+                }
+            });
+        };
+        //return circle marker to the L.geoJson pointToLayer options
+        return layer;
     };
-
-    //determine value of selected attribute for each feature
-    var attValue = Number(feature.properties[attribute]);
-
-    //give each feature's circle marker a radius based on its attribute
-    options.radius = calcPropRadius(attValue);
-
-    //create circle marker layer
-    var layer = L.circleMarker(latlng, options);
-    if (attribute != 0){
-        //call function and sent necessary data to create popup for circleMarkers
-        createPopup(feature.properties, attribute, layer, options.radius);
-        //event listeners to open popup on hover
-        layer.on({
-            mouseover: function(){
-                this.openPopup();
-            },
-            mouseout: function(){
-                this.closePopup();
-            }
-        });
-    };
-    //return circle marker to the L.geoJson pointToLayer options
-    return layer;
 };
 
 //create circle markers for point features to map
 function createPropSymbols(data, map, attributes){
     //create a Leaflet GeoJSON layer and places it on map
     L.geoJson(data, {
-      pointToLayer: function(feature, latlng){
-          return pointToLayer(feature, latlng, attributes);
-      }
+        pointToLayer: function(feature, latlng){
+            return pointToLayer(feature, latlng, attributes);
+        }
     }).addTo(map);
 };
 
@@ -124,7 +127,7 @@ function createPropSymbols(data, map, attributes){
 function updatePropSymbols(map, attribute){
     //iterates through each layer (i.e., point) on map
     map.eachLayer(function(layer){
-        // //conditional to make sure we're processing a layer with an attribute and ignore basemap
+        //conditional to make sure we're processing a layer with an attribute and ignoring other layers
         if (layer.feature){
             //checks if the attribute of the property we are checking is equal to zero
             //need to check this because attribute value of 0 are not considered as existing (using the && operator)
@@ -134,6 +137,7 @@ function updatePropSymbols(map, attribute){
                 var props = layer.feature.properties;
                 //update each feature's radius based on new attribute values
                 var radius = calcPropRadius(props[attribute]);
+
                 layer.setRadius(radius);
 
                 //call function and send necessary data to create popup for circleMarkers
@@ -148,13 +152,12 @@ function updatePropSymbols(map, attribute){
 
                 //call function and send necessary data to create popup for circleMarkers
                 createPopup(props, attribute, layer, radius);
-            }
+            };
         };
-    })
+    });
 };
 
 //function to create sequence controls
-//need to add something that when you adjust slider, it changes dropdown back to Select a tour
 function createSequenceControls(map, attributes){
     //create sequence control to add to leaflet map in bottom left corner
     var SequenceControl = L.Control.extend({
@@ -217,12 +220,13 @@ function createSequenceControls(map, attributes){
 
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
+        //call updateLegend, which in turn class functions to update decade and panel
         updateLegend(map, attributes[index], index, attributes);
-        // updatePanel(map, attributes, index);
         //clears album image from panel when sequencer is used
         $('#album').html('');
+        //calls backgroundInfo function to add text to panel_container when sequencer is used
         backgroundInfo();
-        //reset dropdown list
+        //reset dropdown list to select a tour
         $('#list').val(99);
 
     });
@@ -234,14 +238,13 @@ function createSequenceControls(map, attributes){
 
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
+        //call updateLegend, which in turn class functions to update decade and panel
         updateLegend(map, attributes[index], index, attributes);
-        // updatePanel(map, attributes, index);
-
         //clears album image from panel when sequencer is used
         $('#album').html('');
+        //calls backgroundInfo function to add text to panel_container when sequencer is used
         backgroundInfo();
-
-        //reset dropdown list
+        //reset dropdown list to select a tour
         $('#list').val(99);
 
     });
@@ -270,14 +273,15 @@ function processData(data){
     return attributes;
 };
 
+//function that creates list of tours for 70s upon loading map
 function createPanelFilter(map, attributes){
     //array of years to add to panel
-    var concertYears = ['(1972-73)', '(1974-75)', '(1976)', '(1976-77)', '(1978-79)','(1980-81)', '(1984-85)', '(1988-89)', '(1992-93)', '(1995-96)', '(1999-2000)', '(2002-03)', '(2005)', '(2006)', '(2007-08)', '(2009)', '(2012)', '(2014)', '(2016)'];
+    var concertYears = ['(1972-73)', '(1974-75)', '(1976)', '(1976-77)', '(1978-79)'];
     //create variable to hold unnumbered list of tours
-    var panelContent = '<ul select id="tours">'
+    var panelContent = '<ul id="tours">'
     //for loop adding the first tours to variable
     for (i = 5; i <10 ; i++){
-        panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i - 5] + '</li>';
+        panelContent += '<li class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i - 5] + '</li>';
     };
     //close HTML unnumbered list
     panelContent += "</li>"
@@ -286,6 +290,7 @@ function createPanelFilter(map, attributes){
     $("#panel").html(panelContent);
     //call function for panel event listeners
     panelEvents(map, attributes);
+    //adds background info upon loading map
     backgroundInfo();
 };
 
@@ -293,7 +298,7 @@ function createPanelFilter(map, attributes){
 function backgroundInfo(){
     var content = '<p class="info">Bruce Springsteen, now 66 years old, has been touring with the E Street Band for over 40 years. He continues to play to sold out stadiums and arenas around the world, with sets lasting over three hours.</p><p class="info"id="quote">"Think of it this way: performing is like sprinting while screaming for three, four minutes. And then you do it again. And then you do it again. And then you walk a little, shouting the whole time."</p><p class="info"> -- Bruce Springsteen</p>'
     $("#background").html(content);
-}
+};
 
 //function to hold event listeners for tours listed in panels
 function panelEvents(map, attributes){
@@ -311,20 +316,24 @@ function panelEvents(map, attributes){
         //allows for styling of selected tour by adding/removing class
         $('ul li').removeClass("active");
         $(this).addClass("active");
-        console.log($(this));
         //retrieve index value from list
         var index = $(this).val();
+        //add album to panel based on index number
         $('#album').html('<img src ="/../img/' + index + '.jpg">');
 
+        //sets dropdown list to tour selected in panel
         $('#list').val(index);
-        //did not call updateLegend() here because in updateLegend I call other functions that overwirte
+
+        //did not call updateLegend() here because in updateLegend I call other functions that overwrite
         //the adding of the active class from this event listener function
         //instead just copied code here to avoid loop
+
         //update prop symbols based on new filter choice
         updatePropSymbols(map, attributes[index]);
-        // updateLegend(map, attributes[index], index, attributes);
+        //remove background text because I album cover is present
         $('#background').html(" ")
 
+        //store tour attribute in variable
         var legendContent = attributes[index];
 
         //replaces legend content
@@ -333,6 +342,7 @@ function panelEvents(map, attributes){
         //get max, mean, min values and return as object stored in circleValues
         var circleValues = getCircleValues(map, attributes[index]);
 
+        //loop to update attribute legend
         for (var key in circleValues){
             //get radius for legend based on min, max, mean attribute values in circleValues object
             var radius = calcPropRadius(circleValues[key]);
@@ -354,35 +364,35 @@ function panelEvents(map, attributes){
     });
 };
 
-//function to update panel based on decade selected with sequencer
+//function to update panel/tour list based on decade selected with sequencer
 function updatePanel(map, attributes, index){
     //array of years to add to panel
     var concertYears = ['(1972-73)', '(1974-75)', '(1976)', '(1976-77)', '(1978-79)','(1980-81)', '(1984-85)', '(1988-89)', '(1992-93)', '(1995-96)', '(1999-2000)', '(2002-03)', '(2005)', '(2006)', '(2007-08)', '(2009)', '(2012)', '(2014)', '(2016)'];
     //create variable to hold unnumbered list of tours
-    var panelContent = '<ul select id="tours">'
+    var panelContent = '<ul id="tours">'
     //conditional to check for tours in the 1970s
     if (index == 0){
-        //for loop adding the first tours to variable
+        //for loop adding tours to variable
         for (i = 5; i <10 ; i++){
-            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
     } else if (index == 1) {
-        //for loop adding the first tours to variable
+        //for loop adding tours to variable
         for (i = 10; i <13 ; i++){
-            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
       };
     } else if (index == 2) {
-        //for loop adding the first tours to variable
+        //for loop adding tours to variable
         for (i = 13; i <16 ; i++){
-            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
     } else if (index == 3) {
-        //for loop adding the first tours to variable
+        //for loop adding tours to variable
         for (i = 16; i <21 ; i++){
-            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
     } else if (index == 4) {
-        //for loop adding the first tours to variable
+        //for loop adding tours to variable
         for (i = 21; i <24 ; i++){
             panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
@@ -397,8 +407,9 @@ function updatePanel(map, attributes, index){
 
 };
 
-//add in stopPropagation
+//function to create legend upon lodating map
 function createLegend(map, attributes){
+    //adds legend control to leaflet map
     var LegendControl = L.Control.extend({
         options: {
             position: 'bottomright'
@@ -421,6 +432,7 @@ function createLegend(map, attributes){
                 min: 95
             };
 
+            //loop adding appropriate ID to legend component and setting Y coords.
             for (var circle in circles){
                 //circle string
                 svg += '<circle class="legend-circle" id="' + circle +
@@ -440,13 +452,18 @@ function createLegend(map, attributes){
     });
 
     map.addControl(new LegendControl());
-
+    //call function to create original display of legend
     updateLegend(map, attributes[0], 0, attributes);
-    updateDecade(map, attributes, 0, attributes);
+    //call function to create original display of decade in panel
+    updateDecade(map, attributes, 0);
+    //call function to create original display of tours in panel
+    updatePanel(map, attributes, 0);
+
 
 };
 
-//function to convert index values from entire attributes array into a variable specific to decades
+//function to convert index values from entire attributes array (specifically when selecting a concert)
+//into a variable specific to decades
 function getDecadeValue(index){
     //conditionals to set to proper decade whether a decade or a specific tour is passed
     if (index < 5) {
@@ -463,10 +480,13 @@ function getDecadeValue(index){
         var decadeValue = 4;
     };
     return decadeValue;
-}
+};
 
+//updates decade displayed at top of panel
 function updateDecade(map, attributes, index){
+    //variable to ensure index value represents appropriate decade
     var decadeValue = getDecadeValue(index);
+    //place the appropriate decade into a variable
     var attribute = attributes[decadeValue];
     //add formatted attribute to popup content string
     var year1 = attribute.split("_")[0];
@@ -475,10 +495,11 @@ function updateDecade(map, attributes, index){
     var decadeContent = 'Tours ' + year1 + ' - ' + year2;
     //adds HTML string to div
     $('#decade').html(decadeContent);
+    //call function to update tours listed in panel based on decade selected
     updatePanel(map, attributes, decadeValue);
-
 };
 
+//function to update legend based on user selections
 function updateLegend(map, attribute, index, attributes) {
     //if attribute is decade, make this temporal legend
     if (attribute.indexOf("_") > -1){
@@ -487,23 +508,21 @@ function updateLegend(map, attribute, index, attributes) {
         var year2 = attribute.split("_")[1];
         var legendContent = year1 + " through " + year2;
 
-        // var decadeContent = 'Tours ' + year1 + ' - ' + year2;
-    //if attribute is a tour, make this temporal legend
+    //if attribute is a tour, make tour display in legend
     } else {
         var legendContent = attribute;
-        // var decadeContent = 'Tours ' + year1 + ' - ' + year2;
+    };
 
-    }
     //replaces legend content
     $('#temporal-legend').html(legendContent);
-    // $('#decade').html(decadeContent);
 
-    // updatePanel(map, attributes, index);
+    //calls function to update decade based on attribute index passed to updateLegend
     updateDecade(map, attributes, index);
 
     //get max, mean, min values and return as object stored in circleValues
     var circleValues = getCircleValues(map, attribute);
 
+    //loop to set appropriate values for circles/labels in legend
     for (var key in circleValues){
         //get radius for legend based on min, max, mean attribute values in circleValues object
         var radius = calcPropRadius(circleValues[key]);
@@ -524,7 +543,7 @@ function updateLegend(map, attribute, index, attributes) {
     };
 };
 
-//function to calculate mzx, mean, min values for an attribute-legend
+//function to calculate max, mean, min values for an attribute-legend
 function getCircleValues(map, attribute){
     //start with min at highest possible and max at lowest possible values
     var min = Infinity,
@@ -532,8 +551,8 @@ function getCircleValues(map, attribute){
 
     map.eachLayer(function(layer){
         //get attribute value
-        //include second part of conditional so that attribute values of 0 are not included
-        //because if a 0 is passed as min, the circle will have radius 0 and not show up
+        //include second statement of conditional so that attribute values of 0 are not included
+        //because if a 0 is passed as min, the circle will have radius 0 and not show up in legend
         if (layer.feature && layer.feature.properties[attribute]){
             var attributeValue = Number(layer.feature.properties[attribute]);
 
@@ -565,7 +584,7 @@ function createFilter(map, attributes){
     //variable to hold dropdown
     var legend = L.control({position: 'topright'});
 
-    //not sure what this does??
+    //function called when legend is added to map
     legend.onAdd = function (map) {
 
         //creates a div element to add to map
@@ -574,11 +593,11 @@ function createFilter(map, attributes){
         //variable to hold HTML string; add numeric value to reference index in tours array
         var dropdown = '<select id="list"><option value=99>Select a Tour</option>'
 
-        //for loop to add each tour from 'tours' array to dropdown menu
+        //for loop to add each tour from array to dropdown menu
         for (i = 23; i > 4; i--){
-
-          dropdown += '<option class="tour" value="' + i + '">' + attributes[i] + '</option>'
+            dropdown += '<option class="tour" value="' + i + '">' + attributes[i] + '</option>'
         };
+        //closes HTML string
         dropdown += '</select>';
 
         //adds HTML string fromd dropdown to innerHTML of div
@@ -589,36 +608,38 @@ function createFilter(map, attributes){
 
         return div;
     };legend.addTo(map);
+    //calls eventlistener dropdown function
+    filterIndex(map, attributes)
 };
 
+//function to hold event listener for dropdown and update panel, legend, decade based on selection
 function filterIndex(map, attributes){
     //click listener for filter list
     $('#list').change(function(){
         var index = $(this).val();
         //conditional to avoid anything happening when user re-selects 'Select a Tour'
         if ($(this).val() != 99){
-            //
-            // console.log(index);
-            // console.log($('li.tour').val())
-            var activeTour = '#a' + index;
-            activeTour = String(activeTour)
-            console.log($('#a19'));
-            $('ul li').removeClass("active");
-            $('#a1').css({'color': '#00ccff', 'font-weight': 'bold', 'width': 'auto', 'text-decoration-color': '#00ccff', 'width': 'fit-content'});
 
             //change album div based on index value
             $('#album').html('<img src ="/../img/' + index + '.jpg">');
 
+            //retrieve index for appropriate decade based on tour selection
             var decadeValue = getDecadeValue(index);
+            //set sequencer to appropriate decade based on tour selection
             $('.range-slider').val(decadeValue);
 
             //update prop symbols based on new filter choice
-            updateFilter(map, attributes[index], index);
+            updatePropSymbols(map, attributes[index], index);
             //remove background info
             $('#background').html(" ")
 
+            //update legend based on dropdown selection
             updateLegend(map, attributes[index], index, attributes);
 
+            //ugly conditional statements to set an index variable for the array tourIndex
+            //created below to hold only the tours contained within the decade that is active in map
+            //the tours index in the attributes array determines what its index for array
+            //tourIndex will be
             if (index == 5 || index == 10 || index == 13 || index == 16 || index == 21){
                 var tourIndex = 0
             } else if (index == 6 || index == 11 || index == 14 || index == 17 || index == 22){
@@ -631,48 +652,13 @@ function filterIndex(map, attributes){
                 var tourIndex = 3
             };
 
-
+            //array to hold elements retrieved from panel after it updates based on user's selection in dropdown
             var tourArray = ($("li").get());
-            console.log(tourArray);
+            //adds the class 'active' to the element based on its index
             $(tourArray[tourIndex]).addClass("active");
-
-
         };
     });
 };
-
-//function to update prop symbol size and popup based on filter selection
-function updateFilter(map, attribute){
-    //function to cycle through each layer in map
-    map.eachLayer(function(layer){
-        //checks that the layer is a feature because only features have attributes we're interested in
-        if (layer.feature){
-            //checks if the attribute of the property we are checking is equal to zero
-            //need to check this because attribute value of 0 are not considered as existing (using the && operator)
-            //by explicitly checking that attribute value is 0, we ensure that feature is passed to createPopup to update popup accordingly
-            if (layer.feature.properties[attribute] == 0){
-                //access feature properties
-                var props = layer.feature.properties;
-                //update each feature's radius based on new attribute values
-                var radius = calcPropRadius(props[attribute]);
-                layer.setRadius(radius);
-
-                //call function and send necessary data to create popup for circleMarkers
-                createPopup(props, attribute, layer, radius);
-            } else {
-                //access feature properties
-                var props = layer.feature.properties;
-                //update each feature's radius based on new attribute values
-                var radius = calcPropRadius(props[attribute]);
-                layer.setRadius(radius);
-
-                //call function and send necessary data to create popup for circleMarkers
-                createPopup(props, attribute, layer, radius);
-              }
-        };
-    });
-};
-
 
 //function to retrieve data and place on map
 function getData(map){
@@ -683,17 +669,14 @@ function getData(map){
             //create/returns attributes array
             var attributes = processData(response);
 
+            //creates dropdown menu
             createFilter(map, attributes);
             //call function to create proportional symbols
             createPropSymbols(response, map, attributes);
             //call function to create sequence controls
             createSequenceControls(map, attributes);
-
+            //creates original legend
             createLegend(map, attributes);
-
-            createPanelFilter(map, attributes);
-
-            filterIndex(map, attributes)
         }
     });
 };
