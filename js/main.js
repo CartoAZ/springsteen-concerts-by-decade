@@ -217,11 +217,13 @@ function createSequenceControls(map, attributes){
 
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
-        updateLegend(map, attributes[index]);
-        updatePanel(map, attributes, index);
+        updateLegend(map, attributes[index], index, attributes);
+        // updatePanel(map, attributes, index);
         //clears album image from panel when sequencer is used
         $('#album').html('');
         backgroundInfo();
+        //reset dropdown list
+        $('#list').val(99);
 
     });
 
@@ -232,11 +234,16 @@ function createSequenceControls(map, attributes){
 
         //pass new index to function so it can update prop symbols accordingly
         updatePropSymbols(map, attributes[index]);
-        updateLegend(map, attributes[index]);
-        updatePanel(map, attributes, index);
+        updateLegend(map, attributes[index], index, attributes);
+        // updatePanel(map, attributes, index);
+
         //clears album image from panel when sequencer is used
         $('#album').html('');
         backgroundInfo();
+
+        //reset dropdown list
+        $('#list').val(99);
+
     });
 };
 
@@ -267,10 +274,10 @@ function createPanelFilter(map, attributes){
     //array of years to add to panel
     var concertYears = ['(1972-73)', '(1974-75)', '(1976)', '(1976-77)', '(1978-79)','(1980-81)', '(1984-85)', '(1988-89)', '(1992-93)', '(1995-96)', '(1999-2000)', '(2002-03)', '(2005)', '(2006)', '(2007-08)', '(2009)', '(2012)', '(2014)', '(2016)'];
     //create variable to hold unnumbered list of tours
-    var panelContent = '<ul id="tours">'
+    var panelContent = '<ul select id="tours">'
     //for loop adding the first tours to variable
     for (i = 5; i <10 ; i++){
-        panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i - 5] + '</li>';
+        panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i - 5] + '</li>';
     };
     //close HTML unnumbered list
     panelContent += "</li>"
@@ -282,20 +289,20 @@ function createPanelFilter(map, attributes){
     backgroundInfo();
 };
 
+//function to add some background info to a div when an album cover is not present
 function backgroundInfo(){
     var content = '<p class="info">Bruce Springsteen, now 66 years old, has been touring with the E Street Band for over 40 years. He continues to play to sold out stadiums and arenas around the world, with sets lasting over three hours.</p><p class="info"id="quote">"Think of it this way: performing is like sprinting while screaming for three, four minutes. And then you do it again. And then you do it again. And then you walk a little, shouting the whole time."</p><p class="info"> -- Bruce Springsteen</p>'
     $("#background").html(content);
 }
 
+//function to hold event listeners for tours listed in panels
 function panelEvents(map, attributes){
     //affordance to highlight tour when moused over
     $('ul li.tour').mouseover(function(){
         $(this).addClass("hover");
-        // $(this).css({'text-decoration': 'underline', 'color': '#00ccff'});
     });
     $('li').mouseout(function(){
         $(this).removeClass("hover");
-        // $(this).css({'text-decoration': 'none', 'color': 'white'});
     });
 
     //click listener for buttons
@@ -304,15 +311,46 @@ function panelEvents(map, attributes){
         //allows for styling of selected tour by adding/removing class
         $('ul li').removeClass("active");
         $(this).addClass("active");
-
+        console.log($(this));
         //retrieve index value from list
         var index = $(this).val();
         $('#album').html('<img src ="/../img/' + index + '.jpg">');
 
-    //update prop symbols based on new filter choice
-    updatePropSymbols(map, attributes[index]);
-    updateLegend(map, attributes[index]);
-    $('#background').html(" ")
+        $('#list').val(index);
+        //did not call updateLegend() here because in updateLegend I call other functions that overwirte
+        //the adding of the active class from this event listener function
+        //instead just copied code here to avoid loop
+        //update prop symbols based on new filter choice
+        updatePropSymbols(map, attributes[index]);
+        // updateLegend(map, attributes[index], index, attributes);
+        $('#background').html(" ")
+
+        var legendContent = attributes[index];
+
+        //replaces legend content
+        $('#temporal-legend').html(legendContent);
+
+        //get max, mean, min values and return as object stored in circleValues
+        var circleValues = getCircleValues(map, attributes[index]);
+
+        for (var key in circleValues){
+            //get radius for legend based on min, max, mean attribute values in circleValues object
+            var radius = calcPropRadius(circleValues[key]);
+
+            $('#'+key).attr({
+                cy: 99 - radius,
+                r: radius
+            });
+
+            //conditional to make minimum say 1 show rather than 1 shows
+            if (key == 'min') {
+                //adds legend text
+                $('#'+key+'-text').text(circleValues[key] + " show");
+            } else {
+                //adds legend text
+                $('#'+key+'-text').text(circleValues[key] + " shows");
+            };
+        };
     });
 };
 
@@ -320,81 +358,43 @@ function panelEvents(map, attributes){
 function updatePanel(map, attributes, index){
     //array of years to add to panel
     var concertYears = ['(1972-73)', '(1974-75)', '(1976)', '(1976-77)', '(1978-79)','(1980-81)', '(1984-85)', '(1988-89)', '(1992-93)', '(1995-96)', '(1999-2000)', '(2002-03)', '(2005)', '(2006)', '(2007-08)', '(2009)', '(2012)', '(2014)', '(2016)'];
+    //create variable to hold unnumbered list of tours
+    var panelContent = '<ul select id="tours">'
     //conditional to check for tours in the 1970s
     if (index == 0){
-        //create variable to hold unnumbered list of tours
-        var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 5; i <10 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
-        //close HTML unnumbered list
-        panelContent += "</li>"
-        //add html content to panel
-        $("#panel").html(panelContent);
-        panelEvents(map, attributes);
-
     } else if (index == 1) {
-        //create variable to hold unnumbered list of tours
-        var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 10; i <13 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
       };
-      //close HTML unnumbered list
-      panelContent += "</li>"
-      //add html content to panel
-      $("#panel").html(panelContent);
-
-      //call function for panel event listeners
-      panelEvents(map, attributes);
-
     } else if (index == 2) {
-        //create variable to hold unnumbered list of tours
-        var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 13; i <16 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
-        //close HTML unnumbered list
-        panelContent += "</li>"
-        //add html content to panel
-        $("#panel").html(panelContent);
-
-        //call function for panel event listeners
-        panelEvents(map, attributes);
-
     } else if (index == 3) {
-        //create variable to hold unnumbered list of tours
-        var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 16; i <21 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
-        //close HTML unnumbered list
-        panelContent += "</li>"
-        //add html content to panel
-        $("#panel").html(panelContent);
-
-        //call function for panel event listeners
-        panelEvents(map, attributes);
-
     } else if (index == 4) {
-        //create variable to hold unnumbered list of tours
-        var panelContent = '<ul id="tours">'
         //for loop adding the first tours to variable
         for (i = 21; i <24 ; i++){
-            panelContent += '<li class="tour" value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
+            panelContent += '<li option class="tour" id="a' + i + '"value="'+ i + '">' + attributes[i] + ' ' + concertYears[i-5] + '</li>';
         };
-        //close HTML unnumbered list
-        panelContent += "</li>"
-        //add html content to panel
-        $("#panel").html(panelContent);
-
-        //call function for panel event listeners
-        panelEvents(map, attributes);
-
     };
+    //close HTML unnumbered list
+    panelContent += "</li>"
+    //add html content to panel
+    $("#panel").html(panelContent);
+
+    //call function for panel event listeners
+    panelEvents(map, attributes);
+
 };
 
 //add in stopPropagation
@@ -441,10 +441,45 @@ function createLegend(map, attributes){
 
     map.addControl(new LegendControl());
 
-    updateLegend(map, attributes[0]);
+    updateLegend(map, attributes[0], 0, attributes);
+    updateDecade(map, attributes, 0, attributes);
+
 };
 
-function updateLegend(map, attribute) {
+//function to convert index values from entire attributes array into a variable specific to decades
+function getDecadeValue(index){
+    //conditionals to set to proper decade whether a decade or a specific tour is passed
+    if (index < 5) {
+        var decadeValue = index
+    } else if (index > 4 && index < 10){
+        var decadeValue = 0;
+    } else if (index > 9 && index < 13){
+        var decadeValue = 1;
+    } else if (index > 12 && index < 16){
+        var decadeValue = 2;
+    } else if (index > 15 && index < 21){
+        var decadeValue = 3;
+    } else if (index > 20 && index < 24){
+        var decadeValue = 4;
+    };
+    return decadeValue;
+}
+
+function updateDecade(map, attributes, index){
+    var decadeValue = getDecadeValue(index);
+    var attribute = attributes[decadeValue];
+    //add formatted attribute to popup content string
+    var year1 = attribute.split("_")[0];
+    var year2 = attribute.split("_")[1];
+    //sets HTML string
+    var decadeContent = 'Tours ' + year1 + ' - ' + year2;
+    //adds HTML string to div
+    $('#decade').html(decadeContent);
+    updatePanel(map, attributes, decadeValue);
+
+};
+
+function updateLegend(map, attribute, index, attributes) {
     //if attribute is decade, make this temporal legend
     if (attribute.indexOf("_") > -1){
         //add formatted attribute to popup content string
@@ -452,14 +487,19 @@ function updateLegend(map, attribute) {
         var year2 = attribute.split("_")[1];
         var legendContent = year1 + " through " + year2;
 
-        var decadeContent = 'Tours ' + year1 + ' - ' + year2;
-        $('#decade').html(decadeContent);
+        // var decadeContent = 'Tours ' + year1 + ' - ' + year2;
     //if attribute is a tour, make this temporal legend
     } else {
         var legendContent = attribute;
+        // var decadeContent = 'Tours ' + year1 + ' - ' + year2;
+
     }
     //replaces legend content
     $('#temporal-legend').html(legendContent);
+    // $('#decade').html(decadeContent);
+
+    // updatePanel(map, attributes, index);
+    updateDecade(map, attributes, index);
 
     //get max, mean, min values and return as object stored in circleValues
     var circleValues = getCircleValues(map, attribute);
@@ -520,6 +560,120 @@ function getCircleValues(map, attribute){
     };
 };
 
+//function to create dropdown filter menu
+function createFilter(map, attributes){
+    //variable to hold dropdown
+    var legend = L.control({position: 'topright'});
+
+    //not sure what this does??
+    legend.onAdd = function (map) {
+
+        //creates a div element to add to map
+        var div = L.DomUtil.create('div', 'info legend');
+
+        //variable to hold HTML string; add numeric value to reference index in tours array
+        var dropdown = '<select id="list"><option value=99>Select a Tour</option>'
+
+        //for loop to add each tour from 'tours' array to dropdown menu
+        for (i = 23; i > 4; i--){
+
+          dropdown += '<option class="tour" value="' + i + '">' + attributes[i] + '</option>'
+        };
+        dropdown += '</select>';
+
+        //adds HTML string fromd dropdown to innerHTML of div
+        div.innerHTML = dropdown
+
+        //stops event listeners on map when using dropdown menu
+        div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
+
+        return div;
+    };legend.addTo(map);
+};
+
+function filterIndex(map, attributes){
+    //click listener for filter list
+    $('#list').change(function(){
+        var index = $(this).val();
+        //conditional to avoid anything happening when user re-selects 'Select a Tour'
+        if ($(this).val() != 99){
+            //
+            // console.log(index);
+            // console.log($('li.tour').val())
+            var activeTour = '#a' + index;
+            activeTour = String(activeTour)
+            console.log($('#a19'));
+            $('ul li').removeClass("active");
+            $('#a1').css({'color': '#00ccff', 'font-weight': 'bold', 'width': 'auto', 'text-decoration-color': '#00ccff', 'width': 'fit-content'});
+
+            //change album div based on index value
+            $('#album').html('<img src ="/../img/' + index + '.jpg">');
+
+            var decadeValue = getDecadeValue(index);
+            $('.range-slider').val(decadeValue);
+
+            //update prop symbols based on new filter choice
+            updateFilter(map, attributes[index], index);
+            //remove background info
+            $('#background').html(" ")
+
+            updateLegend(map, attributes[index], index, attributes);
+
+            if (index == 5 || index == 10 || index == 13 || index == 16 || index == 21){
+                var tourIndex = 0
+            } else if (index == 6 || index == 11 || index == 14 || index == 17 || index == 22){
+                var tourIndex = 1
+            } else if (index == 7 || index == 12 || index == 15 || index == 18 || index == 23){
+                var tourIndex = 2
+            } else if (index == 8 || index == 19){
+                var tourIndex = 3
+            } else if (index == 9 || index == 20){
+                var tourIndex = 3
+            };
+
+
+            var tourArray = ($("li").get());
+            console.log(tourArray);
+            $(tourArray[tourIndex]).addClass("active");
+
+
+        };
+    });
+};
+
+//function to update prop symbol size and popup based on filter selection
+function updateFilter(map, attribute){
+    //function to cycle through each layer in map
+    map.eachLayer(function(layer){
+        //checks that the layer is a feature because only features have attributes we're interested in
+        if (layer.feature){
+            //checks if the attribute of the property we are checking is equal to zero
+            //need to check this because attribute value of 0 are not considered as existing (using the && operator)
+            //by explicitly checking that attribute value is 0, we ensure that feature is passed to createPopup to update popup accordingly
+            if (layer.feature.properties[attribute] == 0){
+                //access feature properties
+                var props = layer.feature.properties;
+                //update each feature's radius based on new attribute values
+                var radius = calcPropRadius(props[attribute]);
+                layer.setRadius(radius);
+
+                //call function and send necessary data to create popup for circleMarkers
+                createPopup(props, attribute, layer, radius);
+            } else {
+                //access feature properties
+                var props = layer.feature.properties;
+                //update each feature's radius based on new attribute values
+                var radius = calcPropRadius(props[attribute]);
+                layer.setRadius(radius);
+
+                //call function and send necessary data to create popup for circleMarkers
+                createPopup(props, attribute, layer, radius);
+              }
+        };
+    });
+};
+
+
 //function to retrieve data and place on map
 function getData(map){
     //jQuery AJAX method to retrieve data
@@ -529,7 +683,7 @@ function getData(map){
             //create/returns attributes array
             var attributes = processData(response);
 
-            // createFilter(map, attributes);
+            createFilter(map, attributes);
             //call function to create proportional symbols
             createPropSymbols(response, map, attributes);
             //call function to create sequence controls
@@ -538,6 +692,8 @@ function getData(map){
             createLegend(map, attributes);
 
             createPanelFilter(map, attributes);
+
+            filterIndex(map, attributes)
         }
     });
 };
