@@ -677,6 +677,7 @@ function getData(map){
             createSequenceControls(map, attributes);
             //creates original legend
             createLegend(map, attributes);
+            backgroundInfo();
         }
     });
 };

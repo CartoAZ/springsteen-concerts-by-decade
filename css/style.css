@@ -71,9 +71,10 @@
     bottom: 0;
     right: 7%;
     z-index: 1;
-    font-family: "American Typewriter";
+    font-family: sans-serif;;
     line-height: 1.8em;
     font-weight: lighter;
+    cursor: pointer;
 }
 
 #album {
@@ -117,12 +118,12 @@ li {
 
 #tours .hover {
     color: #336699;
-    font-family: "American Typewriter";
+    font-family: sans-serif;;
     font-weight: bold;
 }
 
 #temporal-legend, #max-text, #mean-text, #min-text{
-    font-family: "American Typewriter";
+    font-family: sans-serif;;
 }
 
 .sequence-control-container, .legend-control-container {
