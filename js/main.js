@@ -319,7 +319,7 @@ function panelEvents(map, attributes){
         //retrieve index value from list
         var index = $(this).val();
         //add album to panel based on index number
-        $('#album').html('<img src ="/../img/' + index + '.jpg">');
+        $('#album').html('<img src ="/../img/a' + index + '.jpg">');
 
         //sets dropdown list to tour selected in panel
         $('#list').val(index);
@@ -621,7 +621,7 @@ function filterIndex(map, attributes){
         if ($(this).val() != 99){
 
             //change album div based on index value
-            $('#album').html('<img src ="/../img/' + index + '.jpg">');
+            $('#album').html('<img src ="/../img/a' + index + '.jpg">');
 
             //retrieve index for appropriate decade based on tour selection
             var decadeValue = getDecadeValue(index);
